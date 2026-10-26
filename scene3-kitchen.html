@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --bg-kitchen: #151525;
+        --fridge: #3a3a3a;
+        --fridge-light: #4a4a4a;
+        --fridge-dark: #2a2a2a;
+        --fridge-inside: #1a1a2a;
+        --counter: #2a2a2a;
+        --tile: #1a1a2a;
+        --water-bottle: #4a90d9;
+        --food-can: #c44a2a;
+        --caio-skin: #e8c5a0;
+        --caio-hair: #1a1a1a;
+        --caio-hoodie: #2d2d2d;
+        --caio-hoodie-light: #3a3a3a;
+        --caio-pants: #1e1e1e;
+        --caio-backpack: #151515;
+        --text-white: #ffffff;
+        --text-dim: #aaaaaa;
+      }
+      
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      
+      #root {
+        width: 1080px;
+        height: 1920px;
+        position: relative;
+        background: var(--bg-kitchen);
+        overflow: hidden;
+      }
+      
+      .clip { position: absolute; }
+      
+      /* Kitchen tiles */
+      .tiles {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 400px;
+        background: 
+          linear-gradient(90deg, var(--tile) 1px, transparent 1px),
+          linear-gradient(var(--tile) 1px, transparent 1px);
+        background-size: 80px 80px;
+      }
+      
+      /* Counter */
+      .counter {
+        position: absolute;
+        left: 50px;
+        right: 50px;
+        bottom: 200px;
+        height: 120px;
+        background: linear-gradient(180deg, var(--counter) 0%, #1a1a1a 100%);
+        border-radius: 8px 8px 0 0;
+        box-shadow: 0 -4px 20px #00000080;
+      }
+      
+      .counter-edge {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 8px;
+        background: linear-gradient(90deg, #3a3a3a 0%, #2a2a2a 50%, #3a3a3a 100%);
+      }
+      
+      /* Fridge */
+      .fridge-container {
+        position: absolute;
+        right: 80px;
+        bottom: 200px;
+        width: 300px;
+        height: 1000px;
+      }
+      
+      .fridge-body {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, var(--fridge-dark) 0%, var(--fridge) 50%, var(--fridge-light) 100%);
+        border-radius: 4px;
+        box-shadow: 0 0 40px #00000080;
+      }
+      
+      .fridge-handle {
+        position: absolute;
+        left: -30px;
+        top: 40%;
+        width: 30px;
+        height: 120px;
+        background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+        border-radius: 0 15px 15px 0;
+        box-shadow: -4px 0 10px #00000080;
+      }
+      
+      .fridge-door-seam {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 100%;
+        height: 2px;
+        background: var(--fridge-dark);
+      }
+      
+      /* Fridge interior (when open) */
+      .fridge-interior {
+        position: absolute;
+        left: 10px;
+        top: 60px;
+        width: calc(100% - 20px);
+        height: calc(100% - 70px);
+        background: var(--fridge-inside);
+        border-radius: 2px;
+        overflow: hidden;
+        transform-origin: left center;
+        transform: rotateY(90deg);
+        opacity: 0;
+      }
+      
+      .fridge-shelf {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, transparent 0%, #3a3a3a 50%, transparent 100%);
+      }
+      
+      .fridge-light {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        background: radial-gradient(circle, #fff8d0 0%, transparent 70%);
+        opacity: 0;
+        filter: blur(10px);
+      }
+      
+      /* Items inside fridge */
+      .fridge-item {
+        position: absolute;
+      }
+      
+      .water-bottle {
+        width: 40px;
+        height: 100px;
+      }
+      
+      .water-bottle .bottle-body {
+        width: 100%;
+        height: 80%;
+        background: linear-gradient(90deg, #5aa0e9 0%, var(--water-bottle) 50%, #3a70b9 100%);
+        border-radius: 8px;
+      }
+      
+      .water-bottle .bottle-cap {
+        width: 60%;
+        height: 20%;
+        margin: 0 auto;
+        background: #2a6090;
+        border-radius: 0 0 4px 4px;
+      }
+      
+      .food-can-item {
+        width: 50px;
+        height: 70px;
+      }
+      
+      .food-can-item .can-body {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, #d45a3a 0%, var(--food-can) 50%, #b43a1a 100%);
+        border-radius: 4px;
+      }
+      
+      .food-can-item .can-top {
+        width: 100%;
+        height: 15%;
+        background: #a42a1a;
+        border-radius: 4px 4px 0 0;
+      }
+      
+      .food-can-item .can-label {
+        width: 80%;
+        height: 40%;
+        margin: 15% auto 0;
+        background: #f5e6d0;
+        border-radius: 2px;
+      }
+      
+      /* Caio */
+      .caio-container {
+        position: absolute;
+        left: 50%;
+        bottom: 180px;
+        transform: translateX(-50%);
+        width: 200px;
+        height: 450px;
+      }
+      
+      .caio-svg { width: 100%; height: 100%; }
+      
+      .breathe {
+        animation: breathe 3s ease-in-out infinite;
+        transform-origin: center bottom;
+      }
+      
+      @keyframes breathe {
+        0%, 100% { transform: scaleY(1) translateX(-50%); }
+        50% { transform: scaleY(1.02) translateX(-50%); }
+      }
+      
+      /* Backpack open */
+      .backpack-open {
+        position: absolute;
+        left: 50%;
+        bottom: 180px;
+        transform: translateX(-50%);
+        width: 200px;
+        height: 200px;
+        opacity: 0;
+      }
+      
+      .backpack-flap {
+        position: absolute;
+        left: 20px;
+        top: 0;
+        width: 160px;
+        height: 180px;
+        background: linear-gradient(180deg, #1a1a1a 0%, var(--caio-backpack) 100%);
+        border-radius: 4px;
+        transform-origin: top center;
+        transform: rotateX(-90deg);
+      }
+      
+      .backpack-content {
+        position: absolute;
+        left: 30px;
+        top: 20px;
+        width: 140px;
+        height: 140px;
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="scene3" data-start="0" data-duration="12" data-width="1080" data-height="1920">
+      <!-- Tiles -->
+      <div class="tiles clip" data-start="0" data-duration="12"></div>
+      
+      <!-- Counter -->
+      <div class="counter clip" data-start="0" data-duration="12">
+        <div class="counter-edge"></div>
+      </div>
+      
+      <!-- Fridge -->
+      <div class="fridge-container clip" data-start="0" data-duration="12" id="fridgeContainer">
+        <div class="fridge-body"></div>
+        <div class="fridge-handle" id="fridgeHandle"></div>
+        <div class="fridge-door-seam"></div>
+        
+        <!-- Fridge interior (opens) -->
+        <div class="fridge-interior clip" data-start="0" data-duration="12" id="fridgeInterior">
+          <div class="fridge-light" id="fridgeLight"></div>
+          <div class="fridge-shelf" style="top: 200px"></div>
+          <div class="fridge-shelf" style="top: 400px"></div>
+          <div class="fridge-shelf" style="top: 600px"></div>
+          
+          <!-- Water bottle -->
+          <div class="fridge-item water-bottle" style="left: 40px; top: 250px">
+            <div class="bottle-body"></div>
+            <div class="bottle-cap"></div>
+          </div>
+          
+          <!-- Food can 1 -->
+          <div class="fridge-item food-can-item" style="left: 100px; top: 260px">
+            <div class="can-top"></div>
+            <div class="can-body"></div>
+            <div class="can-label"></div>
+          </div>
+          
+          <!-- Food can 2 -->
+          <div class="fridge-item food-can-item" style="left: 170px; top: 260px">
+            <div class="can-top"></div>
+            <div class="can-body"></div>
+            <div class="can-label"></div>
+          </div>
+          
+          <!-- Empty space indicators -->
+          <div class="fridge-item" style="left: 40px; top: 450px; width: 200px; height: 30px; display:flex;align-items:center;justify-content:center">
+            <text fill="var(--text-dim)" font-size="14" text-anchor="middle" dominant-baseline="middle">[vazio]</text>
+          </div>
+          <div class="fridge-item" style="left: 40px; top: 650px; width: 200px; height: 30px; display:flex;align-items:center;justify-content:center">
+            <text fill="var(--text-dim)" font-size="14" text-anchor="middle" dominant-baseline="middle">[vazio]</text>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Backpack on counter (opens) -->
+      <div class="backpack-open clip" data-start="6" data-duration="6" id="backpackOpen">
+        <div class="backpack-flap" id="backpackFlap"></div>
+        <div class="backpack-content" id="backpackContent">
+          <div style="position:absolute;left:20px;top:20px;width:40px;height:100px;background:linear-gradient(90deg,#5aa0e9,var(--water-bottle));border-radius:4px"></div>
+          <div style="position:absolute;left:80px;top:30px;width:50px;height:70px;background:linear-gradient(90deg,#d45a3a,var(--food-can));border-radius:3px"></div>
+        </div>
+      </div>
+      
+      <!-- Thought bubble: "Preciso sair" -->
+      <div class="clip" data-start="8" data-duration="4" id="thoughtBubble" style="position:absolute;left:50%;top:200px;transform:translateX(-50%);width:300px;height:120px;background:var(--caio-backpack);border-radius:20px;padding:20px;display:flex;align-items:center;justify-content:center;opacity:0">
+        <text fill="var(--text-white)" font-size="22" font-weight="bold" text-anchor="middle" dominant-baseline="middle">PRECISO SAIR</text>
+      </div>
+      
+      <!-- Caio character -->
+      <div class="caio-container clip breathe" data-start="0" data-duration="12" id="caio">
+        <svg class="caio-svg" viewBox="0 0 300 680" width="300" height="680" role="img" aria-label="Caio, protagonista">
+          <defs>
+            <linearGradient id="skinGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:var(--caio-skin,#e8bd98)"/>
+              <stop offset="100%" style="stop-color:#c99470"/>
+            </linearGradient>
+            <linearGradient id="hoodieGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:var(--caio-hoodie-light,#454545)"/>
+              <stop offset="100%" style="stop-color:var(--caio-hoodie,#242424)"/>
+            </linearGradient>
+            <linearGradient id="pantsGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:#303030"/>
+              <stop offset="100%" style="stop-color:var(--caio-pants,#171717)"/>
+            </linearGradient>
+            <linearGradient id="backpackGradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" style="stop-color:#303030"/>
+              <stop offset="100%" style="stop-color:var(--caio-backpack,#111111)"/>
+            </linearGradient>
+          </defs>
+
+          <g id="caio-body">
+            <!-- Backpack sits behind the shoulders and torso -->
+            <g id="caio-backpack">
+              <path d="M104 171 Q105 145 128 142 L177 142 Q199 149 201 176 L207 353 Q207 374 188 379 L111 379 Q93 374 94 352 Z"
+                    fill="url(#backpackGradient)" stroke="#0d0d0d" stroke-width="3"/>
+              <path d="M119 163 Q110 184 112 215 L114 337" fill="none" stroke="#454545" stroke-width="5" stroke-linecap="round"/>
+              <path d="M183 163 Q193 185 191 216 L190 337" fill="none" stroke="#080808" stroke-width="5" stroke-linecap="round"/>
+              <path d="M128 149 Q129 127 151 127 Q173 127 176 149" fill="none" stroke="#171717" stroke-width="9" stroke-linecap="round"/>
+              <path d="M127 264 Q151 251 176 264 L179 313 Q151 326 124 313 Z" fill="#202020" stroke="#090909" stroke-width="2"/>
+              <path d="M137 276 L166 276" stroke="#414141" stroke-width="3" stroke-linecap="round"/>
+            </g>
+
+            <!-- Legs: tapered silhouettes with visible shoes, entirely inside the viewBox -->
+            <g id="caio-legs">
+              <g id="caio-leg-left" class="caio-leg" transform="translate(105 365)">
+                <path d="M5 0 Q23 -7 43 0 L40 103 L36 173 L32 232 Q19 242 4 232 L0 174 L2 105 Z"
+                      fill="url(#pantsGradient)" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+                <path d="M5 92 L37 98 L35 121 L4 116 Z" fill="#252525" stroke="#111" stroke-width="1.5"/>
+                <path d="M7 98 L31 103 M7 108 L31 113" stroke="#444" stroke-width="1.5"/>
+                <path d="M4 164 Q18 172 37 164 L35 180 Q19 188 3 180 Z" fill="#202020"/>
+                <path d="M2 221 Q18 228 33 221 L34 238 Q33 249 17 250 L-1 247 Q-7 242 -3 233 Z"
+                      fill="#101010" stroke="#050505" stroke-width="2"/>
+                <path d="M-2 239 Q15 244 33 237" fill="none" stroke="#777" stroke-width="3" stroke-linecap="round"/>
+                <path d="M7 232 L24 232" stroke="#4a4a4a" stroke-width="2"/>
+              </g>
+              <g id="caio-leg-right" class="caio-leg" transform="translate(157 365)">
+                <path d="M5 0 Q23 -7 43 0 L41 104 L43 174 L39 232 Q24 242 9 232 L5 174 L2 105 Z"
+                      fill="url(#pantsGradient)" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+                <path d="M8 92 L39 98 L40 121 L8 116 Z" fill="#252525" stroke="#111" stroke-width="1.5"/>
+                <path d="M13 99 L35 103 M13 109 L35 113" stroke="#444" stroke-width="1.5"/>
+                <path d="M7 164 Q25 172 42 164 L41 180 Q25 188 8 180 Z" fill="#202020"/>
+                <path d="M9 221 Q25 228 40 221 L43 237 Q42 248 27 250 L9 247 Q3 242 6 233 Z"
+                      fill="#101010" stroke="#050505" stroke-width="2"/>
+                <path d="M7 239 Q25 244 42 237" fill="none" stroke="#777" stroke-width="3" stroke-linecap="round"/>
+                <path d="M16 232 L33 232" stroke="#4a4a4a" stroke-width="2"/>
+              </g>
+            </g>
+
+            <!-- Hoodie torso: shoulders taper into waist instead of a plain rectangle -->
+            <g id="caio-torso" transform="translate(75 151)">
+              <path d="M34 9 Q49 -1 75 0 Q101 -1 116 9
+                       L137 28 Q145 37 140 54 L128 100
+                       L123 186 Q121 201 106 205
+                       L44 205 Q29 201 27 186
+                       L22 100 L10 54 Q5 37 13 28 Z"
+                    fill="url(#hoodieGradient)" stroke="#171717" stroke-width="3" stroke-linejoin="round"/>
+              <path d="M35 13 Q48 3 75 4 Q102 3 115 13 L104 34 Q75 45 46 34 Z"
+                    fill="#333" stroke="#171717" stroke-width="2"/>
+              <path d="M46 35 Q75 47 104 35" fill="none" stroke="#555" stroke-width="2"/>
+              <path d="M75 43 L75 188" stroke="#171717" stroke-width="2" opacity=".8"/>
+              <path d="M38 79 Q47 88 45 104 M112 79 Q103 88 105 104" fill="none" stroke="#555" stroke-width="2" opacity=".65"/>
+              <path d="M44 150 Q75 158 106 150" fill="none" stroke="#191919" stroke-width="2" opacity=".6"/>
+              <path d="M55 189 L95 189" stroke="#171717" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="65" cy="48" r="2.5" fill="#111"/>
+              <circle cx="85" cy="48" r="2.5" fill="#111"/>
+            </g>
+
+            <!-- Arms follow shoulder shape and remain behind hands -->
+            <g id="caio-arms">
+              <g id="caio-arm-left" class="caio-arm" transform="translate(88 174)">
+                <path d="M17 4 Q3 7 -3 25 L-17 68 Q-21 80 -14 91 L-4 107 Q2 114 10 108 L17 99 Q21 92 15 84 L7 70 L24 34 Z"
+                      fill="url(#hoodieGradient)" stroke="#171717" stroke-width="3" stroke-linejoin="round"/>
+                <path d="M-15 76 Q-5 84 8 76 L14 88 Q4 99 -8 94 Z" fill="#303030"/>
+                <g id="caio-hand-left" class="caio-hand" transform="translate(-13 99)">
+                  <path d="M4 0 Q12 -5 18 2 L23 17 Q24 25 18 30 L9 29 Q3 26 2 19 L0 9 Q0 3 4 0 Z"
+                        fill="url(#skinGradient)" stroke="#a77758" stroke-width="1.5"/>
+                  <path d="M6 12 L8 23 M12 11 L14 24" stroke="#b98563" stroke-width="1.5" stroke-linecap="round"/>
+                </g>
+              </g>
+              <g id="caio-arm-right" class="caio-arm" transform="translate(212 174)">
+                <path d="M-17 4 Q-3 7 3 25 L17 68 Q21 80 14 91 L4 107 Q-2 114 -10 108 L-17 99 Q-21 92 -15 84 L-7 70 L-24 34 Z"
+                      fill="url(#hoodieGradient)" stroke="#171717" stroke-width="3" stroke-linejoin="round"/>
+                <path d="M15 76 Q5 84 -8 76 L-14 88 Q-4 99 8 94 Z" fill="#303030"/>
+                <g id="caio-hand-right" class="caio-hand" transform="translate(-5 99)">
+                  <path d="M-4 0 Q-12 -5 -18 2 L-23 17 Q-24 25 -18 30 L-9 29 Q-3 26 -2 19 L0 9 Q0 3 -4 0 Z"
+                        fill="url(#skinGradient)" stroke="#a77758" stroke-width="1.5"/>
+                  <path d="M-6 12 L-8 23 M-12 11 L-14 24" stroke="#b98563" stroke-width="1.5" stroke-linecap="round"/>
+                </g>
+              </g>
+            </g>
+
+            <!-- Neck -->
+            <path id="caio-neck" d="M130 128 L130 160 Q150 174 170 160 L170 128 Z"
+                  fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+
+            <!-- Head: smaller relative to body, with clear facial features -->
+            <g id="caio-head" transform="translate(75 18)">
+              <path d="M27 54 Q27 17 75 16 Q123 17 123 54 L119 101
+                       Q115 137 75 146 Q35 137 31 101 Z"
+                    fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+              <!-- Ears -->
+              <path d="M31 76 Q18 68 18 83 Q19 100 33 100 Z" fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+              <path d="M119 76 Q132 68 132 83 Q131 100 117 100 Z" fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+              <!-- Hair silhouette and separated fringe -->
+              <g id="caio-hair" fill="var(--caio-hair,#211d1b)" stroke="#171514" stroke-width="2" stroke-linejoin="round">
+                <path d="M27 68 Q19 47 31 31 Q40 12 64 15
+                         Q77 3 92 15 Q115 11 124 34
+                         Q134 49 122 72 L113 58
+                         Q103 63 94 52 Q84 66 70 53
+                         Q57 65 45 57 L35 75 Z"/>
+                <path d="M35 54 Q45 35 63 37 Q56 48 51 58 Z" stroke="none"/>
+                <path d="M66 47 Q78 27 95 34 Q87 46 80 54 Z" stroke="none"/>
+                <path d="M96 43 Q108 35 116 48 L111 58 Z" stroke="none"/>
+              </g>
+              <!-- Brows -->
+              <g id="caio-eyebrows" fill="none" stroke="var(--caio-hair,#211d1b)" stroke-width="4" stroke-linecap="round">
+                <path id="caio-brow-left" d="M43 70 Q54 64 65 70"/>
+                <path id="caio-brow-right" d="M85 70 Q96 64 107 70"/>
+              </g>
+              <!-- Eyes -->
+              <g id="caio-eyes">
+                <g id="caio-eye-left" transform="translate(55 82)">
+                  <ellipse cx="0" cy="0" rx="12" ry="14" fill="var(--caio-eyes-white,#fffaf3)"/>
+                  <ellipse cx="2" cy="2" rx="6.5" ry="8.5" fill="var(--caio-eyes,#594236)"/>
+                  <ellipse cx="4" cy="-2" rx="2.5" ry="3" fill="#fff"/>
+                </g>
+                <g id="caio-eye-right" transform="translate(95 82)">
+                  <ellipse cx="0" cy="0" rx="12" ry="14" fill="var(--caio-eyes-white,#fffaf3)"/>
+                  <ellipse cx="-2" cy="2" rx="6.5" ry="8.5" fill="var(--caio-eyes,#594236)"/>
+                  <ellipse cx="0" cy="-2" rx="2.5" ry="3" fill="#fff"/>
+                </g>
+              </g>
+              <!-- Nose and mouth -->
+              <path d="M75 85 Q70 100 75 103 Q80 105 83 101" fill="none" stroke="#b98462" stroke-width="2.5" stroke-linecap="round"/>
+              <g id="caio-mouth" transform="translate(75 119)">
+                <path id="caio-mouth-path" d="M-11 0 Q0 5 11 0" fill="none" stroke="#875943" stroke-width="3" stroke-linecap="round"/>
+              </g>
+              <!-- Subtle cheek shading -->
+              <ellipse cx="43" cy="104" rx="9" ry="4" fill="#d79c7d" opacity=".28"/>
+              <ellipse cx="107" cy="104" rx="9" ry="4" fill="#d79c7d" opacity=".28"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+    
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      
+      // Caio approaches fridge
+      tl.to("#caio-body", { x: -150, duration: 1.5, ease: "power2.inOut" }, 0.5);
+      
+      // Look at fridge
+      tl.to("#caio-head", { rotation: -15, transformOrigin: "center center", duration: 0.5, ease: "power2.out" }, 1.5);
+      
+      // Open fridge door
+      tl.to("#fridgeInterior", { opacity: 1, rotationY: 0, duration: 1, ease: "power2.out" }, 2);
+      tl.to("#fridgeLight", { opacity: 1, duration: 0.5 }, 2.2);
+      tl.to("#fridgeHandle", { rotation: -30, transformOrigin: "right center", duration: 0.5, ease: "power2.out" }, 2);
+      
+      // Caio reacts to empty fridge
+      tl.to("#caio-head", { rotation: 0, transformOrigin: "center center", duration: 0.4, ease: "power2.out" }, 3);
+      tl.to("#caio-brow-left", { attr: { d: "M15 35 Q35 15 55 35" } }, 3);
+      tl.to("#caio-brow-right", { attr: { d: "M65 35 Q85 15 105 35" } }, 3);
+      tl.to("#caio-eye-left ellipse:nth-child(2), #caio-eye-right ellipse:nth-child(2)", 
+        { attr: { rx: 13, ry: 15 }, duration: 0.2 }, 3);
+      tl.to("#caio-mouth-path", { attr: { d: "M-10 0 Q0 15 10 0" } }, 3);
+      
+      // Lean in to look closer
+      tl.to("#caio-body", { x: -180, scale: 1.05, transformOrigin: "center bottom", duration: 0.8, ease: "power2.out" }, 3.5);
+      
+      // Realization - close fridge
+      tl.to("#fridgeInterior", { opacity: 0, rotationY: 90, duration: 0.8, ease: "power2.in" }, 5);
+      tl.to("#fridgeLight", { opacity: 0, duration: 0.3 }, 5);
+      tl.to("#fridgeHandle", { rotation: 0, transformOrigin: "right center", duration: 0.5, ease: "power2.out" }, 5);
+      
+      // Caio steps back
+      tl.to("#caio-body", { x: 0, scale: 1, transformOrigin: "center bottom", duration: 1, ease: "power2.out" }, 5.5);
+      tl.to("#caio-head", { rotation: 10, transformOrigin: "center center", duration: 0.4, ease: "power2.out" }, 5.5);
+      
+      // Look at backpack
+      tl.to("#caio-head", { rotation: -20, transformOrigin: "center center", duration: 0.6, ease: "power2.inOut" }, 6);
+      
+      // Open backpack
+      tl.to("#backpackOpen", { opacity: 1, duration: 0.3 }, 6.5);
+      tl.to("#backpackFlap", { rotationX: 0, duration: 0.8, ease: "power2.out" }, 6.5);
+      tl.to("#backpackContent", { opacity: 1, duration: 0.5, delay: 0.3 }, 6.5);
+      
+      // Check backpack contents - nod
+      tl.to("#caio-head", { rotation: 5, transformOrigin: "center center", duration: 0.3, yoyo: true, repeat: 3, ease: "power2.inOut" }, 7);
+      
+      // Thought bubble appears
+      tl.to("#thoughtBubble", { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.7)" }, 8);
+      tl.fromTo("#thoughtBubble text", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.3 }, 8.2);
+      
+      // Decision - determined look
+      tl.to("#caio-brow-left", { attr: { d: "M15 35 Q35 30 55 35" } }, 9);
+      tl.to("#caio-brow-right", { attr: { d: "M65 35 Q85 30 105 35" } }, 9);
+      tl.to("#caio-eye-left ellipse:nth-child(2), #caio-eye-right ellipse:nth-child(2)", 
+        { attr: { rx: 10, ry: 12 }, duration: 0.3 }, 9);
+      tl.to("#caio-mouth-path", { attr: { d: "M-12 0 Q0 -5 12 0" } }, 9);
+      
+      // Close backpack
+      tl.to("#backpackFlap", { rotationX: -90, duration: 0.5, ease: "power2.in" }, 10);
+      tl.to("#backpackContent", { opacity: 0, duration: 0.2 }, 10);
+      tl.to("#backpackOpen", { opacity: 0, duration: 0.3 }, 10.5);
+      tl.to("#thoughtBubble", { opacity: 0, duration: 0.3 }, 10.5);
+      
+      // Turn toward exit
+      tl.to("#caio-head", { rotation: 0, transformOrigin: "center center", duration: 0.5, ease: "power2.out" }, 10.5);
+      tl.to("#caio-body", { x: 50, duration: 1, ease: "power2.inOut" }, 10.5);
+      
+      window.__timelines = window.__timelines || {};
+      window.__timelines["scene3"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --bg-market-entrance: #0a0a15;
+        --market-interior: #0d0d1a;
+        --door-metal: #2a2a2a;
+        --door-glass: #0a0a15;
+        --zombie-skin: #7a5a4a;
+        --zombie-skin-dark: #5a3a2a;
+        --zombie-clothes: #3a2a1a;
+        --zombie-eyes: #ff3333;
+        --caio-skin: #e8c5a0;
+        --caio-hair: #1a1a1a;
+        --caio-hoodie: #2d2d2d;
+        --caio-hoodie-light: #3a3a3a;
+        --caio-pants: #1e1e1e;
+        --caio-backpack: #151515;
+        --phone-bg: #0a0a0a;
+        --phone-text: #00ff88;
+        --clock-text: #ffcc00;
+        --title-text: #ffffff;
+        --text-white: #ffffff;
+      }
+      
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      
+      #root {
+        width: 1080px;
+        height: 1920px;
+        position: relative;
+        background: var(--bg-market-entrance);
+        overflow: hidden;
+      }
+      
+      .clip { position: absolute; }
+      
+      /* Market entrance area */
+      .entrance-floor {
+        position: absolute;
+        left: 0; bottom: 0; width: 100%; height: 30%;
+        background: linear-gradient(0deg, #050510 0%, var(--bg-market-entrance) 100%);
+      }
+      
+      /* Automatic doors */
+      .doors-container {
+        position: absolute;
+        left: 50%; bottom: 15%;
+        transform: translateX(-50%);
+        width: 600px; height: 700px;
+        perspective: 1000px;
+      }
+      
+      .door-frame {
+        position: absolute;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background: var(--door-metal);
+        border-radius: 8px;
+        border: 3px solid #1a1a1a;
+      }
+      
+      .door-left, .door-right {
+        position: absolute;
+        top: 15px; width: 48.5%; height: 95%;
+        background: linear-gradient(180deg, var(--door-glass) 0%, #050510 100%);
+        border: 2px solid #1a1a1a;
+        border-radius: 4px;
+        transform-origin: left center;
+        box-shadow: inset 0 0 30px #00000080;
+      }
+      
+      .door-left { left: 15px; transform-origin: left center; }
+      .door-right { right: 15px; transform-origin: right center; }
+      
+      .door-left.closed { transform: rotateY(0deg); }
+      .door-left.open { transform: rotateY(-100deg); }
+      .door-right.closed { transform: rotateY(0deg); }
+      .door-right.open { transform: rotateY(100deg); }
+      
+      .door-handle {
+        position: absolute;
+        top: 50%; transform: translateY(-50%);
+        width: 12px; height: 100px;
+        background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+        border-radius: 6px;
+      }
+      
+      .door-left .door-handle { right: 10px; }
+      .door-right .door-handle { left: 10px; }
+      
+      /* Market interior visible through doors */
+      .market-interior-view {
+        position: absolute;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background: var(--market-interior);
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      
+      .interior-shelves {
+        position: absolute;
+        left: 50%; top: 50%; transform: translate(-50%, -50%);
+        width: 400px; height: 500px;
+      }
+      
+      .shelf-row {
+        position: absolute;
+        left: 0; right: 0; height: 80px;
+        background: linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%);
+        border-radius: 4px;
+        border: 1px solid #151515;
+      }
+      
+      .shelf-items {
+        position: absolute;
+        left: 10px; top: 10px; right: 10px; bottom: 10px;
+        display: flex; gap: 10px; padding: 5px;
+      }
+      
+      .item {
+        flex: 1;
+        background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+        border-radius: 3px;
+        border: 1px solid #151515;
+      }
+      
+      .interior-light {
+        position: absolute;
+        top: 20px; left: 50%; transform: translateX(-50%);
+        width: 100px; height: 100px;
+        background: radial-gradient(circle, #fff8d0 0%, transparent 70%);
+        opacity: 0;
+        filter: blur(20px);
+      }
+      
+      /* Silhouette inside */
+      .silhouette-inside {
+        position: absolute;
+        left: 50%; bottom: 20px; transform: translateX(-50%);
+        width: 120px; height: 300px;
+        background: #050510;
+        border-radius: 60px 60px 10px 10px;
+        opacity: 0;
+        filter: blur(2px);
+      }
+      
+      .silhouette-inside::before {
+        content: '';
+        position: absolute;
+        top: -50px; left: 50%; transform: translateX(-50%);
+        width: 60px; height: 60px;
+        background: #050510;
+        border-radius: 50%;
+      }
+      
+      /* Caio */
+      .caio-container {
+        position: absolute;
+        left: 50%; bottom: 50px;
+        transform: translateX(-50%);
+        width: 200px; height: 450px;
+      }
+      
+      .caio-svg { width: 100%; height: 100%; }
+      
+      .breathe {
+        animation: breathe 2.5s ease-in-out infinite;
+        transform-origin: center bottom;
+      }
+      
+      @keyframes breathe {
+        0%, 100% { transform: scaleY(1) translateX(-50%); }
+        50% { transform: scaleY(1.03) translateX(-50%); }
+      }
+      
+      /* Phone */
+      .phone {
+        position: absolute;
+        left: 50%; bottom: 250px;
+        transform: translateX(-50%);
+        width: 90px; height: 160px;
+        pointer-events: none;
+      }
+      
+      .phone-body {
+        width: 100%; height: 100%;
+        background: var(--phone-bg);
+        border-radius: 14px;
+        border: 2px solid #1a1a1a;
+      }
+      
+      .phone-screen {
+        position: absolute;
+        left: 5px; top: 5px; right: 5px; bottom: 5px;
+        background: #001a05;
+        border-radius: 12px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 15px;
+        font-family: monospace;
+        color: var(--phone-text);
+        font-size: 12px;
+        line-height: 1.5;
+        text-align: center;
+        overflow: hidden;
+      }
+      
+      .phone-notification {
+        position: absolute;
+        top: -35px; left: 50%; transform: translateX(-50%);
+        width: 220px; height: 45px;
+        background: var(--phone-bg);
+        border: 2px solid var(--phone-text);
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--phone-text);
+        font-family: monospace;
+        font-size: 11px;
+        font-weight: bold;
+        opacity: 0;
+        animation: notifyPulse 1s infinite;
+      }
+      
+      @keyframes notifyPulse {
+        0%, 100% { border-color: var(--phone-text); box-shadow: 0 0 15px var(--phone-text); }
+        50% { border-color: #00ffaa; box-shadow: 0 0 30px var(--phone-text); }
+      }
+      
+      .phone-message { display: none; white-space: pre-wrap; }
+      .phone-message.visible { display: block; animation: typewriter 0.8s steps(30) forwards; }
+      
+      @keyframes typewriter {
+        from { width: 0; opacity: 0; }
+        to { width: 100%; opacity: 1; }
+      }
+      
+      /* Clock */
+      .clock {
+        position: absolute;
+        left: 50%; top: 100px;
+        transform: translateX(-50%);
+        width: 200px; height: 80px;
+        background: linear-gradient(180deg, #0a0a0a 0%, #151515 100%);
+        border: 2px solid #2a2a2a;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-family: monospace;
+        color: var(--clock-text);
+        font-size: 42px;
+        font-weight: bold;
+        letter-spacing: 4px;
+        text-shadow: 0 0 10px var(--clock-text);
+        opacity: 0;
+      }
+      
+      /* Title card */
+      .title-card {
+        position: absolute;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background: #000000;
+        opacity: 0;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 40px;
+      }
+      
+      .title-main {
+        color: var(--title-text);
+        font-size: 72px;
+        font-weight: 800;
+        letter-spacing: 8px;
+        text-transform: uppercase;
+        text-shadow: 0 0 30px #ff3333, 0 0 60px #ff1a1a;
+      }
+      
+      .title-sub {
+        color: #ff3333;
+        font-size: 36px;
+        font-weight: 400;
+        letter-spacing: 12px;
+        text-transform: uppercase;
+      }
+      
+      .title-continua {
+        color: var(--title-text);
+        font-size: 48px;
+        font-weight: 600;
+        letter-spacing: 4px;
+        opacity: 0;
+        animation: pulseText 1.5s infinite;
+      }
+      
+      @keyframes pulseText {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
+      }
+      
+      /* Vignette for final */
+      .vignette {
+        position: absolute;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background: radial-gradient(ellipse at center, transparent 0%, #000000 100%);
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="scene6" data-start="0" data-duration="22" data-width="1080" data-height="1920">
+      <!-- Floor -->
+      <div class="entrance-floor clip" data-start="0" data-duration="22"></div>
+      
+      <!-- Automatic doors -->
+      <div class="doors-container clip" data-start="0" data-duration="22" id="doorsContainer">
+        <div class="door-frame"></div>
+        <div class="door-left closed" id="doorLeft">
+          <div class="door-handle"></div>
+        </div>
+        <div class="door-right closed" id="doorRight">
+          <div class="door-handle"></div>
+        </div>
+        
+        <!-- Market interior visible when doors open -->
+        <div class="market-interior-view clip" data-start="0" data-duration="22" id="marketInteriorView">
+          <div class="interior-light" id="interiorLight"></div>
+          <div class="interior-shelves">
+            <div class="shelf-row" style="top: 0"></div>
+            <div class="shelf-row" style="top: 120px"></div>
+            <div class="shelf-row" style="top: 240px"></div>
+            <div class="shelf-row" style="top: 360px"></div>
+            <div class="shelf-items">
+              <div class="item"></div><div class="item"></div><div class="item"></div><div class="item"></div>
+            </div>
+          </div>
+          <div class="silhouette-inside clip" data-start="0" data-duration="22" id="silhouetteInside"></div>
+        </div>
+      </div>
+      
+      <!-- Caio -->
+      <div class="caio-container clip breathe" data-start="0" data-duration="22" id="caio">
+        <svg class="caio-svg" viewBox="0 0 300 680" width="300" height="680" role="img" aria-label="Caio, protagonista">
+          <defs>
+            <linearGradient id="skinGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:var(--caio-skin,#e8bd98)"/>
+              <stop offset="100%" style="stop-color:#c99470"/>
+            </linearGradient>
+            <linearGradient id="hoodieGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:var(--caio-hoodie-light,#454545)"/>
+              <stop offset="100%" style="stop-color:var(--caio-hoodie,#242424)"/>
+            </linearGradient>
+            <linearGradient id="pantsGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:#303030"/>
+              <stop offset="100%" style="stop-color:var(--caio-pants,#171717)"/>
+            </linearGradient>
+            <linearGradient id="backpackGradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" style="stop-color:#303030"/>
+              <stop offset="100%" style="stop-color:var(--caio-backpack,#111111)"/>
+            </linearGradient>
+          </defs>
+
+          <g id="caio-body">
+            <!-- Backpack sits behind the shoulders and torso -->
+            <g id="caio-backpack">
+              <path d="M104 171 Q105 145 128 142 L177 142 Q199 149 201 176 L207 353 Q207 374 188 379 L111 379 Q93 374 94 352 Z"
+                    fill="url(#backpackGradient)" stroke="#0d0d0d" stroke-width="3"/>
+              <path d="M119 163 Q110 184 112 215 L114 337" fill="none" stroke="#454545" stroke-width="5" stroke-linecap="round"/>
+              <path d="M183 163 Q193 185 191 216 L190 337" fill="none" stroke="#080808" stroke-width="5" stroke-linecap="round"/>
+              <path d="M128 149 Q129 127 151 127 Q173 127 176 149" fill="none" stroke="#171717" stroke-width="9" stroke-linecap="round"/>
+              <path d="M127 264 Q151 251 176 264 L179 313 Q151 326 124 313 Z" fill="#202020" stroke="#090909" stroke-width="2"/>
+              <path d="M137 276 L166 276" stroke="#414141" stroke-width="3" stroke-linecap="round"/>
+            </g>
+
+            <!-- Legs: tapered silhouettes with visible shoes, entirely inside the viewBox -->
+            <g id="caio-legs">
+              <g id="caio-leg-left" class="caio-leg" transform="translate(105 365)">
+                <path d="M5 0 Q23 -7 43 0 L40 103 L36 173 L32 232 Q19 242 4 232 L0 174 L2 105 Z"
+                      fill="url(#pantsGradient)" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+                <path d="M5 92 L37 98 L35 121 L4 116 Z" fill="#252525" stroke="#111" stroke-width="1.5"/>
+                <path d="M7 98 L31 103 M7 108 L31 113" stroke="#444" stroke-width="1.5"/>
+                <path d="M4 164 Q18 172 37 164 L35 180 Q19 188 3 180 Z" fill="#202020"/>
+                <path d="M2 221 Q18 228 33 221 L34 238 Q33 249 17 250 L-1 247 Q-7 242 -3 233 Z"
+                      fill="#101010" stroke="#050505" stroke-width="2"/>
+                <path d="M-2 239 Q15 244 33 237" fill="none" stroke="#777" stroke-width="3" stroke-linecap="round"/>
+                <path d="M7 232 L24 232" stroke="#4a4a4a" stroke-width="2"/>
+              </g>
+              <g id="caio-leg-right" class="caio-leg" transform="translate(157 365)">
+                <path d="M5 0 Q23 -7 43 0 L41 104 L43 174 L39 232 Q24 242 9 232 L5 174 L2 105 Z"
+                      fill="url(#pantsGradient)" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+                <path d="M8 92 L39 98 L40 121 L8 116 Z" fill="#252525" stroke="#111" stroke-width="1.5"/>
+                <path d="M13 99 L35 103 M13 109 L35 113" stroke="#444" stroke-width="1.5"/>
+                <path d="M7 164 Q25 172 42 164 L41 180 Q25 188 8 180 Z" fill="#202020"/>
+                <path d="M9 221 Q25 228 40 221 L43 237 Q42 248 27 250 L9 247 Q3 242 6 233 Z"
+                      fill="#101010" stroke="#050505" stroke-width="2"/>
+                <path d="M7 239 Q25 244 42 237" fill="none" stroke="#777" stroke-width="3" stroke-linecap="round"/>
+                <path d="M16 232 L33 232" stroke="#4a4a4a" stroke-width="2"/>
+              </g>
+            </g>
+
+            <!-- Hoodie torso: shoulders taper into waist instead of a plain rectangle -->
+            <g id="caio-torso" transform="translate(75 151)">
+              <path d="M34 9 Q49 -1 75 0 Q101 -1 116 9
+                       L137 28 Q145 37 140 54 L128 100
+                       L123 186 Q121 201 106 205
+                       L44 205 Q29 201 27 186
+                       L22 100 L10 54 Q5 37 13 28 Z"
+                    fill="url(#hoodieGradient)" stroke="#171717" stroke-width="3" stroke-linejoin="round"/>
+              <path d="M35 13 Q48 3 75 4 Q102 3 115 13 L104 34 Q75 45 46 34 Z"
+                    fill="#333" stroke="#171717" stroke-width="2"/>
+              <path d="M46 35 Q75 47 104 35" fill="none" stroke="#555" stroke-width="2"/>
+              <path d="M75 43 L75 188" stroke="#171717" stroke-width="2" opacity=".8"/>
+              <path d="M38 79 Q47 88 45 104 M112 79 Q103 88 105 104" fill="none" stroke="#555" stroke-width="2" opacity=".65"/>
+              <path d="M44 150 Q75 158 106 150" fill="none" stroke="#191919" stroke-width="2" opacity=".6"/>
+              <path d="M55 189 L95 189" stroke="#171717" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="65" cy="48" r="2.5" fill="#111"/>
+              <circle cx="85" cy="48" r="2.5" fill="#111"/>
+            </g>
+
+            <!-- Arms follow shoulder shape and remain behind hands -->
+            <g id="caio-arms">
+              <g id="caio-arm-left" class="caio-arm" transform="translate(88 174)">
+                <path d="M17 4 Q3 7 -3 25 L-17 68 Q-21 80 -14 91 L-4 107 Q2 114 10 108 L17 99 Q21 92 15 84 L7 70 L24 34 Z"
+                      fill="url(#hoodieGradient)" stroke="#171717" stroke-width="3" stroke-linejoin="round"/>
+                <path d="M-15 76 Q-5 84 8 76 L14 88 Q4 99 -8 94 Z" fill="#303030"/>
+                <g id="caio-hand-left" class="caio-hand" transform="translate(-13 99)">
+                  <path d="M4 0 Q12 -5 18 2 L23 17 Q24 25 18 30 L9 29 Q3 26 2 19 L0 9 Q0 3 4 0 Z"
+                        fill="url(#skinGradient)" stroke="#a77758" stroke-width="1.5"/>
+                  <path d="M6 12 L8 23 M12 11 L14 24" stroke="#b98563" stroke-width="1.5" stroke-linecap="round"/>
+                </g>
+              </g>
+              <g id="caio-arm-right" class="caio-arm" transform="translate(212 174)">
+                <path d="M-17 4 Q-3 7 3 25 L17 68 Q21 80 14 91 L4 107 Q-2 114 -10 108 L-17 99 Q-21 92 -15 84 L-7 70 L-24 34 Z"
+                      fill="url(#hoodieGradient)" stroke="#171717" stroke-width="3" stroke-linejoin="round"/>
+                <path d="M15 76 Q5 84 -8 76 L-14 88 Q-4 99 8 94 Z" fill="#303030"/>
+                <g id="caio-hand-right" class="caio-hand" transform="translate(-5 99)">
+                  <path d="M-4 0 Q-12 -5 -18 2 L-23 17 Q-24 25 -18 30 L-9 29 Q-3 26 -2 19 L0 9 Q0 3 -4 0 Z"
+                        fill="url(#skinGradient)" stroke="#a77758" stroke-width="1.5"/>
+                  <path d="M-6 12 L-8 23 M-12 11 L-14 24" stroke="#b98563" stroke-width="1.5" stroke-linecap="round"/>
+                </g>
+              </g>
+            </g>
+
+            <!-- Neck -->
+            <path id="caio-neck" d="M130 128 L130 160 Q150 174 170 160 L170 128 Z"
+                  fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+
+            <!-- Head: smaller relative to body, with clear facial features -->
+            <g id="caio-head" transform="translate(75 18)">
+              <path d="M27 54 Q27 17 75 16 Q123 17 123 54 L119 101
+                       Q115 137 75 146 Q35 137 31 101 Z"
+                    fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+              <!-- Ears -->
+              <path d="M31 76 Q18 68 18 83 Q19 100 33 100 Z" fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+              <path d="M119 76 Q132 68 132 83 Q131 100 117 100 Z" fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+              <!-- Hair silhouette and separated fringe -->
+              <g id="caio-hair" fill="var(--caio-hair,#211d1b)" stroke="#171514" stroke-width="2" stroke-linejoin="round">
+                <path d="M27 68 Q19 47 31 31 Q40 12 64 15
+                         Q77 3 92 15 Q115 11 124 34
+                         Q134 49 122 72 L113 58
+                         Q103 63 94 52 Q84 66 70 53
+                         Q57 65 45 57 L35 75 Z"/>
+                <path d="M35 54 Q45 35 63 37 Q56 48 51 58 Z" stroke="none"/>
+                <path d="M66 47 Q78 27 95 34 Q87 46 80 54 Z" stroke="none"/>
+                <path d="M96 43 Q108 35 116 48 L111 58 Z" stroke="none"/>
+              </g>
+              <!-- Brows -->
+              <g id="caio-eyebrows" fill="none" stroke="var(--caio-hair,#211d1b)" stroke-width="4" stroke-linecap="round">
+                <path id="caio-brow-left" d="M43 70 Q54 64 65 70"/>
+                <path id="caio-brow-right" d="M85 70 Q96 64 107 70"/>
+              </g>
+              <!-- Eyes -->
+              <g id="caio-eyes">
+                <g id="caio-eye-left" transform="translate(55 82)">
+                  <ellipse cx="0" cy="0" rx="12" ry="14" fill="var(--caio-eyes-white,#fffaf3)"/>
+                  <ellipse cx="2" cy="2" rx="6.5" ry="8.5" fill="var(--caio-eyes,#594236)"/>
+                  <ellipse cx="4" cy="-2" rx="2.5" ry="3" fill="#fff"/>
+                </g>
+                <g id="caio-eye-right" transform="translate(95 82)">
+                  <ellipse cx="0" cy="0" rx="12" ry="14" fill="var(--caio-eyes-white,#fffaf3)"/>
+                  <ellipse cx="-2" cy="2" rx="6.5" ry="8.5" fill="var(--caio-eyes,#594236)"/>
+                  <ellipse cx="0" cy="-2" rx="2.5" ry="3" fill="#fff"/>
+                </g>
+              </g>
+              <!-- Nose and mouth -->
+              <path d="M75 85 Q70 100 75 103 Q80 105 83 101" fill="none" stroke="#b98462" stroke-width="2.5" stroke-linecap="round"/>
+              <g id="caio-mouth" transform="translate(75 119)">
+                <path id="caio-mouth-path" d="M-11 0 Q0 5 11 0" fill="none" stroke="#875943" stroke-width="3" stroke-linecap="round"/>
+              </g>
+              <!-- Subtle cheek shading -->
+              <ellipse cx="43" cy="104" rx="9" ry="4" fill="#d79c7d" opacity=".28"/>
+              <ellipse cx="107" cy="104" rx="9" ry="4" fill="#d79c7d" opacity=".28"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      
+      <!-- Phone -->
+      <div class="phone clip" data-start="0" data-duration="22" id="phone">
+        <div class="phone-body"></div>
+        <div class="phone-screen" id="phoneScreen">
+          <div class="phone-message" id="phoneMsg1"></div>
+          <div class="phone-message" id="phoneMsg2"></div>
+        </div>
+        <div class="phone-notification" id="phoneNotif1"></div>
+        <div class="phone-notification" id="phoneNotif2" style="top:auto;bottom:-35px">NOVA MENSAGEM</div>
+      </div>
+      
+      <!-- Clock -->
+      <div class="clock clip" data-start="8" data-duration="14" id="clock">08:31</div>
+      
+      <!-- Title card -->
+      <div class="title-card clip" data-start="20" data-duration="2" id="titleCard">
+        <div class="title-main">ÚLTIMO ESTOQUE</div>
+        <div class="title-sub">EPISÓDIO 1: O PRIMEIRO DIA</div>
+        <div class="title-continua">CONTINUA...</div>
+      </div>
+      
+      <!-- Vignette -->
+      <div class="vignette clip" data-start="18" data-duration="4" id="vignette"></div>
+    </div>
+    
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      
+      // Caio looking at phone (from previous scene)
+      tl.to("#caio-head", { rotation: -15, transformOrigin: "center center", duration: 0.5, ease: "power2.out" }, 0);
+      
+      // Clock appears
+      tl.to("#clock", { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.7)" }, 1);
+      tl.fromTo("#clock", { text: "08:30" }, { text: "08:31", duration: 1, ease: "none" }, 1.5);
+      
+      // Phone notification 2
+      tl.to("#phoneNotif2", { opacity: 1, duration: 0.3, ease: "power2.out" }, 2);
+      tl.to("#phone", { y: -20, duration: 0.5, ease: "back.out(1.7)" }, 2);
+      
+      // Phone vibrates
+      tl.to("#phone", { x: -5, duration: 0.05, repeat: 10, yoyo: true, ease: "rough({strength: 5, points: 20})" }, 2.5);
+      
+      // Message 2: "VOCÊ TEM 11 MINUTOS"
+      tl.set("#phoneMsg2", { innerHTML: "VOCÊ TEM<br>11 MINUTOS", className: "+=visible" }, 3);
+      tl.to("#phoneMsg2", { opacity: 1, duration: 0.5 }, 3);
+      tl.to("#phoneMsg1", { opacity: 0, duration: 0.3 }, 3);
+      
+      // Caio reads - shock
+      tl.to("#caio-head", { rotation: 0, transformOrigin: "center center", duration: 0.4, ease: "power2.out" }, 3.2);
+      tl.to("#caio-brow-left", { attr: { d: "M15 35 Q35 5 55 35" } }, 3.2);
+      tl.to("#caio-brow-right", { attr: { d: "M65 35 Q85 5 105 35" } }, 3.2);
+      tl.to("#caio-eye-left ellipse:nth-child(2), #caio-eye-right ellipse:nth-child(2)", 
+        { attr: { rx: 16, ry: 18 }, duration: 0.2 }, 3.2);
+      tl.to("#caio-mouth-path", { attr: { d: "M-12 0 Q0 25 12 0" } }, 3.2);
+      
+      // Looks at clock
+      tl.to("#caio-head", { rotation: 15, transformOrigin: "center center", duration: 0.6, ease: "power2.inOut" }, 4);
+      tl.to("#caio-head", { rotation: -15, transformOrigin: "center center", duration: 0.6, ease: "power2.inOut" }, 5);
+      tl.to("#caio-head", { rotation: 0, transformOrigin: "center center", duration: 0.4, ease: "power2.out" }, 6);
+      
+      // Clock updates
+      tl.to("#clock", { text: "08:32", duration: 1, ease: "none" }, 5);
+      tl.to("#clock", { text: "08:33", duration: 1, ease: "none" }, 7);
+      
+      // Doors start opening automatically
+      tl.to("#doorLeft", { rotationY: -90, transformOrigin: "left center", duration: 2, ease: "power2.inOut" }, 8);
+      tl.to("#doorRight", { rotationY: 90, transformOrigin: "right center", duration: 2, ease: "power2.inOut" }, 8);
+      
+      // Market interior revealed
+      tl.to("#marketInteriorView", { opacity: 1, scale: 1, duration: 2, ease: "power2.out" }, 8);
+      tl.to("#interiorLight", { opacity: 1, duration: 1 }, 8.5);
+      
+      // Silhouette inside appears
+      tl.to("#silhouetteInside", { opacity: 0.8, y: -20, duration: 1.5, ease: "power2.out" }, 9);
+      
+      // Silhouette moves
+      tl.to("#silhouetteInside", { x: -50, duration: 1, yoyo: true, repeat: 1, ease: "power1.inOut" }, 10);
+      
+      // Caio's final reaction - terror
+      tl.to("#caio-brow-left", { attr: { d: "M15 35 Q35 0 55 35" } }, 10);
+      tl.to("#caio-brow-right", { attr: { d: "M65 35 Q85 0 105 35" } }, 10);
+      tl.to("#caio-eye-left ellipse:nth-child(2), #caio-eye-right ellipse:nth-child(2)", 
+        { attr: { rx: 18, ry: 20 }, duration: 0.3 }, 10);
+      tl.to("#caio-mouth-path", { attr: { d: "M-15 0 Q0 30 15 0" } }, 10);
+      
+      // Step back
+      tl.to("#caio-body", { x: 50, y: 20, scale: 0.95, transformOrigin: "center bottom", duration: 0.8, ease: "power2.out" }, 10.5);
+      
+      // Tremble
+      tl.to("#caio-body", { x: "+=5", duration: 0.05, repeat: 10, yoyo: true, ease: "rough({strength: 10, points: 20})" }, 11);
+      
+      // Phone screen flashes
+      tl.to("#phoneScreen", { background: "#2a0000", duration: 0.1, repeat: 10, yoyo: true }, 12);
+      
+      // Clock ticks down
+      tl.to("#clock", { text: "08:34", duration: 1, ease: "none" }, 9);
+      tl.to("#clock", { text: "08:35", duration: 1, ease: "none" }, 11);
+      tl.to("#clock", { text: "08:36", duration: 1, ease: "none" }, 13);
+      tl.to("#clock", { text: "08:37", duration: 1, ease: "none" }, 15);
+      tl.to("#clock", { text: "08:38", duration: 1, ease: "none" }, 17);
+      tl.to("#clock", { text: "08:39", duration: 1, ease: "none" }, 19);
+      
+      // Vignette closes in
+      tl.to("#vignette", { opacity: 1, duration: 2 }, 18);
+      
+      // Fade to black
+      tl.to("#root", { background: "#000000", duration: 1 }, 19);
+      
+      // Title card
+      tl.to("#titleCard", { opacity: 1, duration: 0.5 }, 20);
+      tl.fromTo(".title-main", { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }, 20.2);
+      tl.fromTo(".title-sub", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }, 20.5);
+      tl.to(".title-continua", { opacity: 1, duration: 0.5 }, 21);
+      
+      window.__timelines = window.__timelines || {};
+      window.__timelines["scene6"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

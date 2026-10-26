@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --bg-corridor: #0d0d1a;
+        --wall: #151525;
+        --wall-dark: #0a0a15;
+        --door: #2a2a2a;
+        --door-frame: #1a1a1a;
+        --door-handle: #3a3a3a;
+        --shadow: #050510;
+        --alert-red: #ff1a1a;
+        --caio-skin: #e8c5a0;
+        --caio-hair: #1a1a1a;
+        --caio-hoodie: #2d2d2d;
+        --caio-hoodie-light: #3a3a3a;
+        --caio-pants: #1e1e1e;
+        --caio-backpack: #151515;
+      }
+      
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      
+      #root {
+        width: 1080px;
+        height: 1920px;
+        position: relative;
+        background: var(--bg-corridor);
+        overflow: hidden;
+      }
+      
+      .clip { position: absolute; }
+      
+      /* Corridor walls with perspective */
+      .wall-left {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 200px;
+        height: 100%;
+        background: linear-gradient(90deg, var(--wall-dark) 0%, var(--wall) 100%);
+      }
+      
+      .wall-right {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 200px;
+        height: 100%;
+        background: linear-gradient(270deg, var(--wall-dark) 0%, var(--wall) 100%);
+      }
+      
+      .ceiling {
+        position: absolute;
+        left: 200px;
+        right: 200px;
+        top: 0;
+        height: 100px;
+        background: linear-gradient(180deg, var(--wall-dark) 0%, var(--wall) 100%);
+      }
+      
+      .floor {
+        position: absolute;
+        left: 200px;
+        right: 200px;
+        bottom: 0;
+        height: 150px;
+        background: linear-gradient(0deg, var(--wall-dark) 0%, var(--wall) 100%);
+      }
+      
+      /* Door */
+      .door-container {
+        position: absolute;
+        left: 50%;
+        top: 200px;
+        transform: translateX(-50%);
+        width: 400px;
+        height: 1000px;
+      }
+      
+      .door-frame {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--door-frame);
+        border-radius: 4px;
+      }
+      
+      .door {
+        position: absolute;
+        left: 8px;
+        top: 8px;
+        width: calc(100% - 16px);
+        height: calc(100% - 16px);
+        background: linear-gradient(180deg, #353535 0%, var(--door) 50%, #1a1a1a 100%);
+        border-radius: 2px;
+        box-shadow: inset 0 0 50px #00000080;
+      }
+      
+      .door-panel {
+        position: absolute;
+        left: 50%;
+        top: 30%;
+        transform: translateX(-50%);
+        width: 80%;
+        height: 40%;
+        background: linear-gradient(180deg, #252525 0%, #1a1a1a 100%);
+        border-radius: 2px;
+        border: 1px solid #3a3a3a;
+      }
+      
+      .door-handle {
+        position: absolute;
+        right: 40px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 80px;
+        background: linear-gradient(180deg, #4a4a4a 0%, var(--door-handle) 100%);
+        border-radius: 10px;
+        box-shadow: 0 2px 8px #00000080;
+      }
+      
+      .peephole {
+        position: absolute;
+        left: 50%;
+        top: 35%;
+        transform: translateX(-50%);
+        width: 30px;
+        height: 30px;
+        background: #000000;
+        border-radius: 50%;
+        border: 3px solid #2a2a2a;
+        box-shadow: inset 0 0 10px #000000;
+      }
+      
+      /* Shadow passing under door */
+      .shadow-under-door {
+        position: absolute;
+        left: 8px;
+        bottom: 8px;
+        width: calc(100% - 16px);
+        height: 60px;
+        background: linear-gradient(0deg, transparent, var(--shadow));
+        opacity: 0;
+        transform: translateY(100%);
+      }
+      
+      /* Shadow silhouette passing by */
+      .shadow-silhouette {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        transform: translateX(-50%);
+        width: 300px;
+        height: 100%;
+        background: linear-gradient(90deg, transparent 0%, var(--shadow) 50%, transparent 100%);
+        opacity: 0;
+      }
+      
+      /* Knock effect lines */
+      .knock-lines {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 200px;
+        height: 200px;
+        pointer-events: none;
+        opacity: 0;
+      }
+      
+      .knock-ring {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        border: 3px solid var(--alert-red);
+        border-radius: 50%;
+        opacity: 0;
+      }
+      
+      /* Camera shake */
+      @keyframes shake {
+        0%, 100% { transform: translate(0, 0); }
+        20% { transform: translate(-8px, 4px); }
+        40% { transform: translate(8px, -4px); }
+        60% { transform: translate(-6px, 2px); }
+        80% { transform: translate(6px, -2px); }
+      }
+      
+      .shake {
+        animation: shake 0.08s linear;
+      }
+      
+      /* Caio */
+      .caio-container {
+        position: absolute;
+        left: 50%;
+        bottom: 50px;
+        transform: translateX(-50%);
+        width: 200px;
+        height: 450px;
+      }
+      
+      .caio-svg { width: 100%; height: 100%; }
+      
+      .breathe {
+        animation: breathe 2.5s ease-in-out infinite;
+        transform-origin: center bottom;
+      }
+      
+      @keyframes breathe {
+        0%, 100% { transform: scaleY(1) translateX(-50%); }
+        50% { transform: scaleY(1.03) translateX(-50%); }
+      }
+      
+      /* Fear tremble */
+      @keyframes tremble {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-3px); }
+        75% { transform: translateX(3px); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="scene2" data-start="0" data-duration="12" data-width="1080" data-height="1920">
+      <!-- Corridor walls -->
+      <div class="wall-left clip" data-start="0" data-duration="12"></div>
+      <div class="wall-right clip" data-start="0" data-duration="12"></div>
+      <div class="ceiling clip" data-start="0" data-duration="12"></div>
+      <div class="floor clip" data-start="0" data-duration="12"></div>
+      
+      <!-- Door -->
+      <div class="door-container clip" data-start="0" data-duration="12" id="doorContainer">
+        <div class="door-frame"></div>
+        <div class="door" id="door"></div>
+        <div class="door-panel"></div>
+        <div class="door-handle" id="doorHandle"></div>
+        <div class="peephole" id="peephole"></div>
+        <div class="shadow-under-door clip" data-start="0" data-duration="12" id="shadowUnderDoor"></div>
+      </div>
+      
+      <!-- Shadow silhouette passing by -->
+      <div class="shadow-silhouette clip" data-start="2" data-duration="8" id="shadowSilhouette"></div>
+      
+      <!-- Knock rings (visual effect) -->
+      <div class="knock-lines clip" data-start="1" data-duration="10" id="knockLines">
+        <div class="knock-ring" id="knockRing1" style="width:0;height:0"></div>
+        <div class="knock-ring" id="knockRing2" style="width:0;height:0"></div>
+        <div class="knock-ring" id="knockRing3" style="width:0;height:0"></div>
+      </div>
+      
+      <!-- Caio character -->
+      <div class="caio-container clip breathe" data-start="0" data-duration="12" id="caio">
+        <svg class="caio-svg" viewBox="0 0 300 680" width="300" height="680" role="img" aria-label="Caio, protagonista">
+          <defs>
+            <linearGradient id="skinGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:var(--caio-skin,#e8bd98)"/>
+              <stop offset="100%" style="stop-color:#c99470"/>
+            </linearGradient>
+            <linearGradient id="hoodieGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:var(--caio-hoodie-light,#454545)"/>
+              <stop offset="100%" style="stop-color:var(--caio-hoodie,#242424)"/>
+            </linearGradient>
+            <linearGradient id="pantsGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:#303030"/>
+              <stop offset="100%" style="stop-color:var(--caio-pants,#171717)"/>
+            </linearGradient>
+            <linearGradient id="backpackGradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" style="stop-color:#303030"/>
+              <stop offset="100%" style="stop-color:var(--caio-backpack,#111111)"/>
+            </linearGradient>
+          </defs>
+
+          <g id="caio-body">
+            <!-- Backpack sits behind the shoulders and torso -->
+            <g id="caio-backpack">
+              <path d="M104 171 Q105 145 128 142 L177 142 Q199 149 201 176 L207 353 Q207 374 188 379 L111 379 Q93 374 94 352 Z"
+                    fill="url(#backpackGradient)" stroke="#0d0d0d" stroke-width="3"/>
+              <path d="M119 163 Q110 184 112 215 L114 337" fill="none" stroke="#454545" stroke-width="5" stroke-linecap="round"/>
+              <path d="M183 163 Q193 185 191 216 L190 337" fill="none" stroke="#080808" stroke-width="5" stroke-linecap="round"/>
+              <path d="M128 149 Q129 127 151 127 Q173 127 176 149" fill="none" stroke="#171717" stroke-width="9" stroke-linecap="round"/>
+              <path d="M127 264 Q151 251 176 264 L179 313 Q151 326 124 313 Z" fill="#202020" stroke="#090909" stroke-width="2"/>
+              <path d="M137 276 L166 276" stroke="#414141" stroke-width="3" stroke-linecap="round"/>
+            </g>
+
+            <!-- Legs: tapered silhouettes with visible shoes, entirely inside the viewBox -->
+            <g id="caio-legs">
+              <g id="caio-leg-left" class="caio-leg" transform="translate(105 365)">
+                <path d="M5 0 Q23 -7 43 0 L40 103 L36 173 L32 232 Q19 242 4 232 L0 174 L2 105 Z"
+                      fill="url(#pantsGradient)" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+                <path d="M5 92 L37 98 L35 121 L4 116 Z" fill="#252525" stroke="#111" stroke-width="1.5"/>
+                <path d="M7 98 L31 103 M7 108 L31 113" stroke="#444" stroke-width="1.5"/>
+                <path d="M4 164 Q18 172 37 164 L35 180 Q19 188 3 180 Z" fill="#202020"/>
+                <path d="M2 221 Q18 228 33 221 L34 238 Q33 249 17 250 L-1 247 Q-7 242 -3 233 Z"
+                      fill="#101010" stroke="#050505" stroke-width="2"/>
+                <path d="M-2 239 Q15 244 33 237" fill="none" stroke="#777" stroke-width="3" stroke-linecap="round"/>
+                <path d="M7 232 L24 232" stroke="#4a4a4a" stroke-width="2"/>
+              </g>
+              <g id="caio-leg-right" class="caio-leg" transform="translate(157 365)">
+                <path d="M5 0 Q23 -7 43 0 L41 104 L43 174 L39 232 Q24 242 9 232 L5 174 L2 105 Z"
+                      fill="url(#pantsGradient)" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+                <path d="M8 92 L39 98 L40 121 L8 116 Z" fill="#252525" stroke="#111" stroke-width="1.5"/>
+                <path d="M13 99 L35 103 M13 109 L35 113" stroke="#444" stroke-width="1.5"/>
+                <path d="M7 164 Q25 172 42 164 L41 180 Q25 188 8 180 Z" fill="#202020"/>
+                <path d="M9 221 Q25 228 40 221 L43 237 Q42 248 27 250 L9 247 Q3 242 6 233 Z"
+                      fill="#101010" stroke="#050505" stroke-width="2"/>
+                <path d="M7 239 Q25 244 42 237" fill="none" stroke="#777" stroke-width="3" stroke-linecap="round"/>
+                <path d="M16 232 L33 232" stroke="#4a4a4a" stroke-width="2"/>
+              </g>
+            </g>
+
+            <!-- Hoodie torso: shoulders taper into waist instead of a plain rectangle -->
+            <g id="caio-torso" transform="translate(75 151)">
+              <path d="M34 9 Q49 -1 75 0 Q101 -1 116 9
+                       L137 28 Q145 37 140 54 L128 100
+                       L123 186 Q121 201 106 205
+                       L44 205 Q29 201 27 186
+                       L22 100 L10 54 Q5 37 13 28 Z"
+                    fill="url(#hoodieGradient)" stroke="#171717" stroke-width="3" stroke-linejoin="round"/>
+              <path d="M35 13 Q48 3 75 4 Q102 3 115 13 L104 34 Q75 45 46 34 Z"
+                    fill="#333" stroke="#171717" stroke-width="2"/>
+              <path d="M46 35 Q75 47 104 35" fill="none" stroke="#555" stroke-width="2"/>
+              <path d="M75 43 L75 188" stroke="#171717" stroke-width="2" opacity=".8"/>
+              <path d="M38 79 Q47 88 45 104 M112 79 Q103 88 105 104" fill="none" stroke="#555" stroke-width="2" opacity=".65"/>
+              <path d="M44 150 Q75 158 106 150" fill="none" stroke="#191919" stroke-width="2" opacity=".6"/>
+              <path d="M55 189 L95 189" stroke="#171717" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="65" cy="48" r="2.5" fill="#111"/>
+              <circle cx="85" cy="48" r="2.5" fill="#111"/>
+            </g>
+
+            <!-- Arms follow shoulder shape and remain behind hands -->
+            <g id="caio-arms">
+              <g id="caio-arm-left" class="caio-arm" transform="translate(88 174)">
+                <path d="M17 4 Q3 7 -3 25 L-17 68 Q-21 80 -14 91 L-4 107 Q2 114 10 108 L17 99 Q21 92 15 84 L7 70 L24 34 Z"
+                      fill="url(#hoodieGradient)" stroke="#171717" stroke-width="3" stroke-linejoin="round"/>
+                <path d="M-15 76 Q-5 84 8 76 L14 88 Q4 99 -8 94 Z" fill="#303030"/>
+                <g id="caio-hand-left" class="caio-hand" transform="translate(-13 99)">
+                  <path d="M4 0 Q12 -5 18 2 L23 17 Q24 25 18 30 L9 29 Q3 26 2 19 L0 9 Q0 3 4 0 Z"
+                        fill="url(#skinGradient)" stroke="#a77758" stroke-width="1.5"/>
+                  <path d="M6 12 L8 23 M12 11 L14 24" stroke="#b98563" stroke-width="1.5" stroke-linecap="round"/>
+                </g>
+              </g>
+              <g id="caio-arm-right" class="caio-arm" transform="translate(212 174)">
+                <path d="M-17 4 Q-3 7 3 25 L17 68 Q21 80 14 91 L4 107 Q-2 114 -10 108 L-17 99 Q-21 92 -15 84 L-7 70 L-24 34 Z"
+                      fill="url(#hoodieGradient)" stroke="#171717" stroke-width="3" stroke-linejoin="round"/>
+                <path d="M15 76 Q5 84 -8 76 L-14 88 Q-4 99 8 94 Z" fill="#303030"/>
+                <g id="caio-hand-right" class="caio-hand" transform="translate(-5 99)">
+                  <path d="M-4 0 Q-12 -5 -18 2 L-23 17 Q-24 25 -18 30 L-9 29 Q-3 26 -2 19 L0 9 Q0 3 -4 0 Z"
+                        fill="url(#skinGradient)" stroke="#a77758" stroke-width="1.5"/>
+                  <path d="M-6 12 L-8 23 M-12 11 L-14 24" stroke="#b98563" stroke-width="1.5" stroke-linecap="round"/>
+                </g>
+              </g>
+            </g>
+
+            <!-- Neck -->
+            <path id="caio-neck" d="M130 128 L130 160 Q150 174 170 160 L170 128 Z"
+                  fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+
+            <!-- Head: smaller relative to body, with clear facial features -->
+            <g id="caio-head" transform="translate(75 18)">
+              <path d="M27 54 Q27 17 75 16 Q123 17 123 54 L119 101
+                       Q115 137 75 146 Q35 137 31 101 Z"
+                    fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+              <!-- Ears -->
+              <path d="M31 76 Q18 68 18 83 Q19 100 33 100 Z" fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+              <path d="M119 76 Q132 68 132 83 Q131 100 117 100 Z" fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+              <!-- Hair silhouette and separated fringe -->
+              <g id="caio-hair" fill="var(--caio-hair,#211d1b)" stroke="#171514" stroke-width="2" stroke-linejoin="round">
+                <path d="M27 68 Q19 47 31 31 Q40 12 64 15
+                         Q77 3 92 15 Q115 11 124 34
+                         Q134 49 122 72 L113 58
+                         Q103 63 94 52 Q84 66 70 53
+                         Q57 65 45 57 L35 75 Z"/>
+                <path d="M35 54 Q45 35 63 37 Q56 48 51 58 Z" stroke="none"/>
+                <path d="M66 47 Q78 27 95 34 Q87 46 80 54 Z" stroke="none"/>
+                <path d="M96 43 Q108 35 116 48 L111 58 Z" stroke="none"/>
+              </g>
+              <!-- Brows -->
+              <g id="caio-eyebrows" fill="none" stroke="var(--caio-hair,#211d1b)" stroke-width="4" stroke-linecap="round">
+                <path id="caio-brow-left" d="M43 70 Q54 64 65 70"/>
+                <path id="caio-brow-right" d="M85 70 Q96 64 107 70"/>
+              </g>
+              <!-- Eyes -->
+              <g id="caio-eyes">
+                <g id="caio-eye-left" transform="translate(55 82)">
+                  <ellipse cx="0" cy="0" rx="12" ry="14" fill="var(--caio-eyes-white,#fffaf3)"/>
+                  <ellipse cx="2" cy="2" rx="6.5" ry="8.5" fill="var(--caio-eyes,#594236)"/>
+                  <ellipse cx="4" cy="-2" rx="2.5" ry="3" fill="#fff"/>
+                </g>
+                <g id="caio-eye-right" transform="translate(95 82)">
+                  <ellipse cx="0" cy="0" rx="12" ry="14" fill="var(--caio-eyes-white,#fffaf3)"/>
+                  <ellipse cx="-2" cy="2" rx="6.5" ry="8.5" fill="var(--caio-eyes,#594236)"/>
+                  <ellipse cx="0" cy="-2" rx="2.5" ry="3" fill="#fff"/>
+                </g>
+              </g>
+              <!-- Nose and mouth -->
+              <path d="M75 85 Q70 100 75 103 Q80 105 83 101" fill="none" stroke="#b98462" stroke-width="2.5" stroke-linecap="round"/>
+              <g id="caio-mouth" transform="translate(75 119)">
+                <path id="caio-mouth-path" d="M-11 0 Q0 5 11 0" fill="none" stroke="#875943" stroke-width="3" stroke-linecap="round"/>
+              </g>
+              <!-- Subtle cheek shading -->
+              <ellipse cx="43" cy="104" rx="9" ry="4" fill="#d79c7d" opacity=".28"/>
+              <ellipse cx="107" cy="104" rx="9" ry="4" fill="#d79c7d" opacity=".28"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+    
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      
+      // Initial position - Caio facing door
+      tl.set("#caio-body", { x: 0 });
+      tl.set("#caio-head", { rotation: 0, transformOrigin: "center center" });
+      
+      // First knock at 1s - shadow passes
+      tl.to("#shadowSilhouette", { opacity: 0.6, duration: 0.3 }, 1);
+      tl.to("#shadowSilhouette", { opacity: 0, duration: 0.5 }, 1.3);
+      
+      // Knock 1 - door shake + ring
+      tl.to("#doorContainer", { x: -5, duration: 0.05, ease: "rough({strength: 10, points: 20})", yoyo: true, repeat: 3 }, 1);
+      tl.to("#knockRing1", { width: 150, height: 150, opacity: 1, duration: 0.3, ease: "power2.out" }, 1);
+      tl.to("#knockRing1", { opacity: 0, duration: 0.5 }, 1.3);
+      
+      // Caio reacts - fear
+      tl.to("#caio-body", { x: 30, duration: 0.4, ease: "power2.out" }, 1.1);
+      tl.to("#caio-head", { rotation: 5, transformOrigin: "center center", duration: 0.3, ease: "power2.out" }, 1.1);
+      tl.to("#caio-brow-left", { attr: { d: "M15 35 Q35 10 55 35" } }, 1.1);
+      tl.to("#caio-brow-right", { attr: { d: "M65 35 Q85 10 105 35" } }, 1.1);
+      tl.to("#caio-eye-left ellipse:nth-child(2), #caio-eye-right ellipse:nth-child(2)", 
+        { attr: { rx: 14, ry: 16 }, duration: 0.2 }, 1.1);
+      tl.to("#caio-mouth-path", { attr: { d: "M-10 0 Q0 18 10 0" } }, 1.1);
+      
+      // Shadow under door appears
+      tl.to("#shadowUnderDoor", { opacity: 0.8, y: 0, duration: 0.5 }, 1.5);
+      
+      // Second knock at 3s
+      tl.to("#doorContainer", { x: -8, duration: 0.05, ease: "rough({strength: 15, points: 20})", yoyo: true, repeat: 4 }, 3);
+      tl.to("#knockRing2", { width: 200, height: 200, opacity: 1, duration: 0.3, ease: "power2.out" }, 3);
+      tl.to("#knockRing2", { opacity: 0, duration: 0.5 }, 3.3);
+      
+      // Caio backs away more
+      tl.to("#caio-body", { x: 80, duration: 0.6, ease: "power2.out" }, 3.1);
+      tl.to("#caio-head", { rotation: -10, transformOrigin: "center center", duration: 0.4, ease: "power2.out" }, 3.1);
+      
+      // Tremble
+      tl.to("#caio-body", { x: "+=3", duration: 0.08, repeat: 8, yoyo: true, ease: "rough({strength: 5, points: 10})" }, 3.2);
+      
+      // Third knock at 5s - stronger
+      tl.to("#doorContainer", { x: -12, duration: 0.05, ease: "rough({strength: 20, points: 20})", yoyo: true, repeat: 5 }, 5);
+      tl.to("#knockRing3", { width: 250, height: 250, opacity: 1, duration: 0.3, ease: "power2.out" }, 5);
+      tl.to("#knockRing3", { opacity: 0, duration: 0.5 }, 5.3);
+      
+      // Shadow under door intensifies
+      tl.to("#shadowUnderDoor", { height: 100, opacity: 1, duration: 0.3 }, 5);
+      
+      // Caio maximum fear - wide eyes, open mouth
+      tl.to("#caio-eye-left ellipse:nth-child(2), #caio-eye-right ellipse:nth-child(2)", 
+        { attr: { rx: 16, ry: 18 }, duration: 0.2 }, 5.1);
+      tl.to("#caio-mouth-path", { attr: { d: "M-12 0 Q0 25 12 0" } }, 5.1);
+      tl.to("#caio-brow-left", { attr: { d: "M15 35 Q35 5 55 35" } }, 5.1);
+      tl.to("#caio-brow-right", { attr: { d: "M65 35 Q85 5 105 35" } }, 5.1);
+      
+      // Caio steps back further
+      tl.to("#caio-body", { x: 120, duration: 0.8, ease: "power2.out" }, 5.2);
+      
+      // Sustained shadow under door
+      tl.to("#shadowUnderDoor", { opacity: 0.5, duration: 2 }, 7);
+      
+      // Caio breathing heavily - faster breathe
+      // (handled by CSS animation)
+      
+      // Final moments - Caio looks at corridor ends
+      tl.to("#caio-head", { rotation: 15, transformOrigin: "center center", duration: 0.6, ease: "power2.inOut" }, 8);
+      tl.to("#caio-head", { rotation: -15, transformOrigin: "center center", duration: 0.6, ease: "power2.inOut" }, 9);
+      tl.to("#caio-head", { rotation: 0, transformOrigin: "center center", duration: 0.5, ease: "power2.out" }, 10);
+      
+      window.__timelines = window.__timelines || {};
+      window.__timelines["scene2"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

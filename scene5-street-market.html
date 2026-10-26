@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --bg-street: #151525;
+        --bg-sky: #0a0a15;
+        --building: #101020;
+        --window-lit: #1a1a3a;
+        --window-dark: #0a0a1a;
+        --street-light: #ffaa00;
+        --market-sign: #ff3333;
+        --market-sign-dim: #cc2222;
+        --zombie-skin: #7a5a4a;
+        --zombie-skin-dark: #5a3a2a;
+        --zombie-clothes: #3a2a1a;
+        --zombie-eyes: #ff3333;
+        --caio-skin: #e8c5a0;
+        --caio-hair: #1a1a1a;
+        --caio-hoodie: #2d2d2d;
+        --caio-hoodie-light: #3a3a3a;
+        --caio-pants: #1e1e1e;
+        --caio-backpack: #151515;
+        --phone-bg: #0a0a0a;
+        --phone-text: #00ff88;
+        --text-white: #ffffff;
+      }
+      
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      
+      #root {
+        width: 1080px;
+        height: 1920px;
+        position: relative;
+        background: var(--bg-street);
+        overflow: hidden;
+      }
+      
+      .clip { position: absolute; }
+      
+      /* Sky */
+      .sky {
+        position: absolute;
+        left: 0; top: 0; width: 100%; height: 60%;
+        background: linear-gradient(180deg, var(--bg-sky) 0%, var(--bg-street) 100%);
+      }
+      
+      /* Buildings */
+      .building {
+        position: absolute;
+        bottom: 0;
+        background: var(--building);
+        border-left: 1px solid #1a1a30;
+        border-right: 1px solid #1a1a30;
+      }
+      
+      .building-window {
+        position: absolute;
+        background: var(--window-dark);
+        border: 1px solid #050510;
+      }
+      
+      .building-window.lit {
+        background: var(--window-lit);
+        box-shadow: 0 0 10px #2a2a4a;
+      }
+      
+      /* Street */
+      .street {
+        position: absolute;
+        left: 0; bottom: 0; width: 100%; height: 40%;
+        background: linear-gradient(0deg, #0d0d1a 0%, var(--bg-street) 100%);
+      }
+      
+      .street-line {
+        position: absolute;
+        left: 50%; bottom: 20%; transform: translateX(-50%);
+        width: 4px; height: 60px;
+        background: repeating-linear-gradient(180deg, #3a3a3a 0, #3a3a3a 20px, transparent 20px, transparent 40px);
+        opacity: 0.5;
+      }
+      
+      /* Street lights */
+      .street-light-pole {
+        position: absolute;
+        bottom: 15%;
+        width: 6px; height: 200px;
+        background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+      }
+      
+      .street-light-glow {
+        position: absolute;
+        bottom: 35%; left: 50%; transform: translateX(-50%);
+        width: 200px; height: 200px;
+        background: radial-gradient(circle, var(--street-light) 0%, transparent 70%);
+        opacity: 0.15;
+        filter: blur(20px);
+      }
+      
+      /* Supermarket */
+      .supermarket {
+        position: absolute;
+        right: 50px; bottom: 15%;
+        width: 500px; height: 600px;
+      }
+      
+      .market-facade {
+        position: absolute;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background: linear-gradient(180deg, #1a1a2a 0%, #151525 100%);
+        border-radius: 8px 8px 0 0;
+        border: 2px solid #2a2a2a;
+      }
+      
+      .market-windows {
+        position: absolute;
+        left: 20px; top: 20px; right: 20px; bottom: 150px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        gap: 15px;
+        padding: 10px;
+      }
+      
+      .market-window {
+        background: var(--window-dark);
+        border: 1px solid #0a0a1a;
+        border-radius: 4px;
+      }
+      
+      .market-window.broken {
+        background: #0a0a15;
+        border-color: #3a1a1a;
+      }
+      
+      .market-entrance {
+        position: absolute;
+        left: 50%; bottom: 0; transform: translateX(-50%);
+        width: 200px; height: 150px;
+        background: #0a0a15;
+        border: 2px solid #2a2a2a;
+        border-bottom: none;
+        border-radius: 8px 8px 0 0;
+      }
+      
+      .market-doors {
+        position: absolute;
+        left: 10px; top: 10px; right: 10px; bottom: 10px;
+        display: flex;
+      }
+      
+      .market-door {
+        flex: 1;
+        background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+        border: 1px solid #3a3a3a;
+        border-radius: 2px;
+      }
+      
+      .market-door.closed { transform: translateX(0); }
+      .market-door.open { transform: translateX(-100%); }
+      
+      .market-sign {
+        position: absolute;
+        left: 50%; top: -60px; transform: translateX(-50%);
+        width: 400px; height: 80px;
+        background: linear-gradient(180deg, var(--market-sign) 0%, var(--market-sign-dim) 100%);
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 30px var(--market-sign);
+        animation: signFlicker 0.5s infinite alternate;
+      }
+      
+      @keyframes signFlicker {
+        0% { opacity: 1; box-shadow: 0 0 30px var(--market-sign); }
+        100% { opacity: 0.8; box-shadow: 0 0 15px var(--market-sign); }
+      }
+      
+      .market-sign-text {
+        color: white; font-size: 36px; font-weight: bold; letter-spacing: 2px;
+        text-shadow: 0 0 10px #ff6666;
+      }
+      
+      /* Zombie */
+      .zombie {
+        position: absolute;
+        left: 50%; bottom: 15%;
+        transform: translateX(-50%);
+        width: 150px; height: 350px;
+        opacity: 0;
+      }
+      
+      .zombie-svg { width: 100%; height: 100%; }
+      
+      /* Caio */
+      .caio-container {
+        position: absolute;
+        left: 50%; bottom: 50px;
+        transform: translateX(-50%);
+        width: 200px; height: 450px;
+      }
+      
+      .caio-svg { width: 100%; height: 100%; }
+      
+      .breathe {
+        animation: breathe 3s ease-in-out infinite;
+        transform-origin: center bottom;
+      }
+      
+      @keyframes breathe {
+        0%, 100% { transform: scaleY(1) translateX(-50%); }
+        50% { transform: scaleY(1.02) translateX(-50%); }
+      }
+      
+      /* Phone */
+      .phone {
+        position: absolute;
+        left: 50%; bottom: 200px;
+        transform: translateX(-50%);
+        width: 80px; height: 140px;
+        opacity: 0;
+        pointer-events: none;
+      }
+      
+      .phone-body {
+        width: 100%; height: 100%;
+        background: var(--phone-bg);
+        border-radius: 12px;
+        border: 2px solid #1a1a1a;
+      }
+      
+      .phone-screen {
+        position: absolute;
+        left: 4px; top: 4px; right: 4px; bottom: 4px;
+        background: #001a05;
+        border-radius: 10px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 10px;
+        font-family: monospace;
+        color: var(--phone-text);
+        font-size: 11px;
+        line-height: 1.4;
+        text-align: center;
+        overflow: hidden;
+      }
+      
+      .phone-notification {
+        position: absolute;
+        top: -30px; left: 50%; transform: translateX(-50%);
+        width: 200px; height: 40px;
+        background: var(--phone-bg);
+        border: 2px solid var(--phone-text);
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--phone-text);
+        font-family: monospace;
+        font-size: 10px;
+        font-weight: bold;
+        opacity: 0;
+        animation: notifyPulse 1s infinite;
+      }
+      
+      @keyframes notifyPulse {
+        0%, 100% { border-color: var(--phone-text); box-shadow: 0 0 10px var(--phone-text); }
+        50% { border-color: #00ffaa; box-shadow: 0 0 20px var(--phone-text); }
+      }
+      
+      /* Hide message */
+      .phone-message { display: none; }
+      .phone-message.visible { display: block; animation: typewriter 0.5s steps(20) forwards; }
+      
+      @keyframes typewriter {
+        from { width: 0; }
+        to { width: 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="scene5" data-start="0" data-duration="19" data-width="1080" data-height="1920">
+      <!-- Sky -->
+      <div class="sky clip" data-start="0" data-duration="19"></div>
+      
+      <!-- Buildings left -->
+      <div class="building clip" data-start="0" data-duration="19" style="left:0;width:220px;height:800px" id="building1">
+        <div class="building-window" style="left:20px;top:30px;width:45px;height:70px"></div>
+        <div class="building-window lit" style="left:20px;top:130px;width:45px;height:70px"></div>
+        <div class="building-window" style="left:20px;top:230px;width:45px;height:70px"></div>
+        <div class="building-window" style="left:20px;top:330px;width:45px;height:70px"></div>
+        <div class="building-window lit" style="left:20px;top:430px;width:45px;height:70px"></div>
+        <div class="building-window" style="left:20px;top:530px;width:45px;height:70px"></div>
+        <div class="building-window" style="left:20px;top:630px;width:45px;height:70px"></div>
+        <div class="building-window" style="left:85px;top:30px;width:45px;height:70px"></div>
+        <div class="building-window" style="left:85px;top:130px;width:45px;height:70px"></div>
+        <div class="building-window lit" style="left:85px;top:230px;width:45px;height:70px"></div>
+        <div class="building-window" style="left:85px;top:330px;width:45px;height:70px"></div>
+        <div class="building-window" style="left:85px;top:430px;width:45px;height:70px"></div>
+        <div class="building-window lit" style="left:85px;top:530px;width:45px;height:70px"></div>
+        <div class="building-window" style="left:85px;top:630px;width:45px;height:70px"></div>
+      </div>
+      
+      <div class="building clip" data-start="0" data-duration="19" style="left:250px;width:180px;height:700px" id="building2">
+        <div class="building-window" style="left:15px;top:20px;width:35px;height:60px"></div>
+        <div class="building-window lit" style="left:15px;top:100px;width:35px;height:60px"></div>
+        <div class="building-window" style="left:15px;top:180px;width:35px;height:60px"></div>
+        <div class="building-window" style="left:15px;top:260px;width:35px;height:60px"></div>
+        <div class="building-window" style="left:15px;top:340px;width:35px;height:60px"></div>
+        <div class="building-window lit" style="left:15px;top:420px;width:35px;height:60px"></div>
+        <div class="building-window" style="left:15px;top:500px;width:35px;height:60px"></div>
+        <div class="building-window" style="left:15px;top:580px;width:35px;height:60px"></div>
+        <div class="building-window" style="left:65px;top:20px;width:35px;height:60px"></div>
+        <div class="building-window lit" style="left:65px;top:100px;width:35px;height:60px"></div>
+        <div class="building-window" style="left:65px;top:180px;width:35px;height:60px"></div>
+        <div class="building-window" style="left:65px;top:260px;width:35px;height:60px"></div>
+        <div class="building-window" style="left:65px;top:340px;width:35px;height:60px"></div>
+        <div class="building-window" style="left:65px;top:420px;width:35px;height:60px"></div>
+        <div class="building-window lit" style="left:65px;top:500px;width:35px;height:60px"></div>
+        <div class="building-window" style="left:65px;top:580px;width:35px;height:60px"></div>
+      </div>
+      
+      <!-- Street -->
+      <div class="street clip" data-start="0" data-duration="19"></div>
+      <div class="street-line clip" data-start="0" data-duration="19"></div>
+      
+      <!-- Street lights -->
+      <div class="street-light-pole clip" data-start="0" data-duration="19" style="left:100px"></div>
+      <div class="street-light-glow clip" data-start="0" data-duration="19" style="left:100px"></div>
+      <div class="street-light-pole clip" data-start="0" data-duration="19" style="left:400px"></div>
+      <div class="street-light-glow clip" data-start="0" data-duration="19" style="left:400px"></div>
+      <div class="street-light-pole clip" data-start="0" data-duration="19" style="left:800px"></div>
+      <div class="street-light-glow clip" data-start="0" data-duration="19" style="left:800px"></div>
+      
+      <!-- Supermarket -->
+      <div class="supermarket clip" data-start="0" data-duration="19" id="supermarket">
+        <div class="market-facade"></div>
+        <div class="market-windows">
+          <div class="market-window"></div>
+          <div class="market-window lit"></div>
+          <div class="market-window"></div>
+          <div class="market-window broken"></div>
+          <div class="market-window lit"></div>
+          <div class="market-window"></div>
+          <div class="market-window broken"></div>
+          <div class="market-window"></div>
+          <div class="market-window"></div>
+          <div class="market-window lit"></div>
+          <div class="market-window"></div>
+          <div class="market-window"></div>
+        </div>
+        <div class="market-sign">
+          <div class="market-sign-text">SUPERMERCADO</div>
+        </div>
+        <div class="market-entrance" id="marketEntrance">
+          <div class="market-doors">
+            <div class="market-door closed" id="marketDoorLeft"></div>
+            <div class="market-door closed" id="marketDoorRight"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Zombie near market -->
+      <div class="zombie clip" data-start="8" data-duration="11" id="zombie">
+        <svg class="zombie-svg" viewBox="0 0 200 450" width="150" height="350">
+          <defs>
+            <linearGradient id="zombieSkinGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:var(--zombie-skin)"/>
+              <stop offset="100%" style="stop-color:var(--zombie-skin-dark)"/>
+            </linearGradient>
+            <linearGradient id="zombieClothesGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#4a3a2a"/>
+              <stop offset="100%" style="stop-color:var(--zombie-clothes)"/>
+            </linearGradient>
+          </defs>
+          
+          <g id="zombie-body" class="zombie-body">
+            <g id="zombie-legs" transform="translate(40, 220)">
+              <g id="zombie-leg-left" class="zombie-leg">
+                <path d="M0 0 Q0 -10 15 -10 Q30 -10 30 0 L30 130 Q30 140 15 140 Q0 140 0 130 Z" fill="url(#zombieClothesGradient)"/>
+                <path d="M-5 130 Q-5 140 15 140 Q35 140 35 130 L35 125 Q35 120 15 120 Q-5 120 -5 125 Z" fill="#1a1a1a"/>
+              </g>
+              <g id="zombie-leg-right" class="zombie-leg" transform="translate(40, 0)">
+                <path d="M0 0 Q0 -10 15 -10 Q30 -10 30 0 L30 130 Q30 140 15 140 Q0 140 0 130 Z" fill="url(#zombieClothesGradient)"/>
+                <path d="M-5 130 Q-5 140 15 140 Q35 140 35 130 L35 125 Q35 120 15 120 Q-5 120 -5 125 Z" fill="#1a1a1a"/>
+              </g>
+            </g>
+            
+            <g id="zombie-torso" transform="translate(25, 70)">
+              <path d="M0 0 L100 0 Q110 0 110 10 L110 120 Q110 130 100 130 L0 130 Q-10 130 -10 120 L-10 10 Q-10 0 0 0 Z" fill="url(#zombieClothesGradient)"/>
+              <path d="M30 30 L45 50" stroke="#8b0000" stroke-width="3" opacity="0.8"/>
+              <path d="M70 60 L85 80" stroke="#8b0000" stroke-width="3" opacity="0.8"/>
+            </g>
+            
+            <g id="zombie-arms">
+              <g id="zombie-arm-left" transform="translate(15, 90)">
+                <path d="M0 0 Q-10 20 -10 50 Q-10 80 0 90 Q10 100 10 110 Q0 120 0 130 Z" fill="url(#zombieSkinGradient)"/>
+                <g transform="translate(-5, 120)">
+                  <ellipse cx="10" cy="10" rx="14" ry="20" fill="url(#zombieSkinGradient)"/>
+                  <path d="M4 5 Q4 -2 12 -5 Q20 -2 20 5 Q20 15 12 15 Q4 15 4 5" fill="url(#zombieSkinGradient)"/>
+                </g>
+              </g>
+              <g id="zombie-arm-right" transform="translate(135, 90)">
+                <path d="M0 0 Q10 20 10 50 Q10 80 0 90 Q-10 100 -10 110 Q0 120 0 130 Z" fill="url(#zombieSkinGradient)"/>
+                <g transform="translate(-5, 120)">
+                  <ellipse cx="10" cy="10" rx="14" ry="20" fill="url(#zombieSkinGradient)"/>
+                  <path d="M4 5 Q4 -2 12 -5 Q20 -2 20 5 Q20 15 12 15 Q4 15 4 5" fill="url(#zombieSkinGradient)"/>
+                </g>
+              </g>
+            </g>
+            
+            <g id="zombie-head" transform="translate(20, -20)">
+              <ellipse cx="60" cy="65" rx="55" ry="60" fill="url(#zombieSkinGradient)"/>
+              <path d="M10 110 L10 130 L110 130 L110 110 Z" fill="url(#zombieSkinGradient)"/>
+              
+              <g fill="var(--zombie-clothes)">
+                <ellipse cx="30" cy="20" rx="15" ry="8"/>
+                <ellipse cx="90" cy="25" rx="12" ry="6"/>
+                <ellipse cx="60" cy="10" rx="20" ry="10"/>
+              </g>
+              
+              <ellipse cx="5" cy="65" rx="7" ry="16" fill="url(#zombieSkinGradient)"/>
+              <ellipse cx="115" cy="65" rx="7" ry="16" fill="url(#zombieSkinGradient)"/>
+              
+              <g id="zombie-eyes">
+                <g transform="translate(25, 50)">
+                  <ellipse cx="0" cy="0" rx="16" ry="18" fill="#1a0000"/>
+                  <ellipse cx="0" cy="0" rx="10" ry="12" fill="var(--zombie-eyes)"/>
+                  <ellipse cx="0" cy="0" rx="6" ry="6" fill="#ff6666"/>
+                  <circle cx="0" cy="0" r="3" fill="#ffaaaa"/>
+                </g>
+                <g transform="translate(95, 50)">
+                  <ellipse cx="0" cy="0" rx="16" ry="18" fill="#1a0000"/>
+                  <ellipse cx="0" cy="0" rx="10" ry="12" fill="var(--zombie-eyes)"/>
+                  <ellipse cx="0" cy="0" rx="6" ry="6" fill="#ff6666"/>
+                  <circle cx="0" cy="0" r="3" fill="#ffaaaa"/>
+                </g>
+              </g>
+              
+              <path d="M40 100 Q60 125 80 100 Q70 110 60 115 Q50 110 40 110 Z" fill="#1a0000"/>
+              <path d="M50 105 Q60 115 70 105" stroke="#8b0000" stroke-width="2" fill="none"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      
+      <!-- Caio -->
+      <div class="caio-container clip breathe" data-start="0" data-duration="19" id="caio">
+        <svg class="caio-svg" viewBox="0 0 300 680" width="300" height="680" role="img" aria-label="Caio, protagonista">
+          <defs>
+            <linearGradient id="skinGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:var(--caio-skin,#e8bd98)"/>
+              <stop offset="100%" style="stop-color:#c99470"/>
+            </linearGradient>
+            <linearGradient id="hoodieGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:var(--caio-hoodie-light,#454545)"/>
+              <stop offset="100%" style="stop-color:var(--caio-hoodie,#242424)"/>
+            </linearGradient>
+            <linearGradient id="pantsGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:#303030"/>
+              <stop offset="100%" style="stop-color:var(--caio-pants,#171717)"/>
+            </linearGradient>
+            <linearGradient id="backpackGradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" style="stop-color:#303030"/>
+              <stop offset="100%" style="stop-color:var(--caio-backpack,#111111)"/>
+            </linearGradient>
+          </defs>
+
+          <g id="caio-body">
+            <!-- Backpack sits behind the shoulders and torso -->
+            <g id="caio-backpack">
+              <path d="M104 171 Q105 145 128 142 L177 142 Q199 149 201 176 L207 353 Q207 374 188 379 L111 379 Q93 374 94 352 Z"
+                    fill="url(#backpackGradient)" stroke="#0d0d0d" stroke-width="3"/>
+              <path d="M119 163 Q110 184 112 215 L114 337" fill="none" stroke="#454545" stroke-width="5" stroke-linecap="round"/>
+              <path d="M183 163 Q193 185 191 216 L190 337" fill="none" stroke="#080808" stroke-width="5" stroke-linecap="round"/>
+              <path d="M128 149 Q129 127 151 127 Q173 127 176 149" fill="none" stroke="#171717" stroke-width="9" stroke-linecap="round"/>
+              <path d="M127 264 Q151 251 176 264 L179 313 Q151 326 124 313 Z" fill="#202020" stroke="#090909" stroke-width="2"/>
+              <path d="M137 276 L166 276" stroke="#414141" stroke-width="3" stroke-linecap="round"/>
+            </g>
+
+            <!-- Legs: tapered silhouettes with visible shoes, entirely inside the viewBox -->
+            <g id="caio-legs">
+              <g id="caio-leg-left" class="caio-leg" transform="translate(105 365)">
+                <path d="M5 0 Q23 -7 43 0 L40 103 L36 173 L32 232 Q19 242 4 232 L0 174 L2 105 Z"
+                      fill="url(#pantsGradient)" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+                <path d="M5 92 L37 98 L35 121 L4 116 Z" fill="#252525" stroke="#111" stroke-width="1.5"/>
+                <path d="M7 98 L31 103 M7 108 L31 113" stroke="#444" stroke-width="1.5"/>
+                <path d="M4 164 Q18 172 37 164 L35 180 Q19 188 3 180 Z" fill="#202020"/>
+                <path d="M2 221 Q18 228 33 221 L34 238 Q33 249 17 250 L-1 247 Q-7 242 -3 233 Z"
+                      fill="#101010" stroke="#050505" stroke-width="2"/>
+                <path d="M-2 239 Q15 244 33 237" fill="none" stroke="#777" stroke-width="3" stroke-linecap="round"/>
+                <path d="M7 232 L24 232" stroke="#4a4a4a" stroke-width="2"/>
+              </g>
+              <g id="caio-leg-right" class="caio-leg" transform="translate(157 365)">
+                <path d="M5 0 Q23 -7 43 0 L41 104 L43 174 L39 232 Q24 242 9 232 L5 174 L2 105 Z"
+                      fill="url(#pantsGradient)" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+                <path d="M8 92 L39 98 L40 121 L8 116 Z" fill="#252525" stroke="#111" stroke-width="1.5"/>
+                <path d="M13 99 L35 103 M13 109 L35 113" stroke="#444" stroke-width="1.5"/>
+                <path d="M7 164 Q25 172 42 164 L41 180 Q25 188 8 180 Z" fill="#202020"/>
+                <path d="M9 221 Q25 228 40 221 L43 237 Q42 248 27 250 L9 247 Q3 242 6 233 Z"
+                      fill="#101010" stroke="#050505" stroke-width="2"/>
+                <path d="M7 239 Q25 244 42 237" fill="none" stroke="#777" stroke-width="3" stroke-linecap="round"/>
+                <path d="M16 232 L33 232" stroke="#4a4a4a" stroke-width="2"/>
+              </g>
+            </g>
+
+            <!-- Hoodie torso: shoulders taper into waist instead of a plain rectangle -->
+            <g id="caio-torso" transform="translate(75 151)">
+              <path d="M34 9 Q49 -1 75 0 Q101 -1 116 9
+                       L137 28 Q145 37 140 54 L128 100
+                       L123 186 Q121 201 106 205
+                       L44 205 Q29 201 27 186
+                       L22 100 L10 54 Q5 37 13 28 Z"
+                    fill="url(#hoodieGradient)" stroke="#171717" stroke-width="3" stroke-linejoin="round"/>
+              <path d="M35 13 Q48 3 75 4 Q102 3 115 13 L104 34 Q75 45 46 34 Z"
+                    fill="#333" stroke="#171717" stroke-width="2"/>
+              <path d="M46 35 Q75 47 104 35" fill="none" stroke="#555" stroke-width="2"/>
+              <path d="M75 43 L75 188" stroke="#171717" stroke-width="2" opacity=".8"/>
+              <path d="M38 79 Q47 88 45 104 M112 79 Q103 88 105 104" fill="none" stroke="#555" stroke-width="2" opacity=".65"/>
+              <path d="M44 150 Q75 158 106 150" fill="none" stroke="#191919" stroke-width="2" opacity=".6"/>
+              <path d="M55 189 L95 189" stroke="#171717" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="65" cy="48" r="2.5" fill="#111"/>
+              <circle cx="85" cy="48" r="2.5" fill="#111"/>
+            </g>
+
+            <!-- Arms follow shoulder shape and remain behind hands -->
+            <g id="caio-arms">
+              <g id="caio-arm-left" class="caio-arm" transform="translate(88 174)">
+                <path d="M17 4 Q3 7 -3 25 L-17 68 Q-21 80 -14 91 L-4 107 Q2 114 10 108 L17 99 Q21 92 15 84 L7 70 L24 34 Z"
+                      fill="url(#hoodieGradient)" stroke="#171717" stroke-width="3" stroke-linejoin="round"/>
+                <path d="M-15 76 Q-5 84 8 76 L14 88 Q4 99 -8 94 Z" fill="#303030"/>
+                <g id="caio-hand-left" class="caio-hand" transform="translate(-13 99)">
+                  <path d="M4 0 Q12 -5 18 2 L23 17 Q24 25 18 30 L9 29 Q3 26 2 19 L0 9 Q0 3 4 0 Z"
+                        fill="url(#skinGradient)" stroke="#a77758" stroke-width="1.5"/>
+                  <path d="M6 12 L8 23 M12 11 L14 24" stroke="#b98563" stroke-width="1.5" stroke-linecap="round"/>
+                </g>
+              </g>
+              <g id="caio-arm-right" class="caio-arm" transform="translate(212 174)">
+                <path d="M-17 4 Q-3 7 3 25 L17 68 Q21 80 14 91 L4 107 Q-2 114 -10 108 L-17 99 Q-21 92 -15 84 L-7 70 L-24 34 Z"
+                      fill="url(#hoodieGradient)" stroke="#171717" stroke-width="3" stroke-linejoin="round"/>
+                <path d="M15 76 Q5 84 -8 76 L-14 88 Q-4 99 8 94 Z" fill="#303030"/>
+                <g id="caio-hand-right" class="caio-hand" transform="translate(-5 99)">
+                  <path d="M-4 0 Q-12 -5 -18 2 L-23 17 Q-24 25 -18 30 L-9 29 Q-3 26 -2 19 L0 9 Q0 3 -4 0 Z"
+                        fill="url(#skinGradient)" stroke="#a77758" stroke-width="1.5"/>
+                  <path d="M-6 12 L-8 23 M-12 11 L-14 24" stroke="#b98563" stroke-width="1.5" stroke-linecap="round"/>
+                </g>
+              </g>
+            </g>
+
+            <!-- Neck -->
+            <path id="caio-neck" d="M130 128 L130 160 Q150 174 170 160 L170 128 Z"
+                  fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+
+            <!-- Head: smaller relative to body, with clear facial features -->
+            <g id="caio-head" transform="translate(75 18)">
+              <path d="M27 54 Q27 17 75 16 Q123 17 123 54 L119 101
+                       Q115 137 75 146 Q35 137 31 101 Z"
+                    fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+              <!-- Ears -->
+              <path d="M31 76 Q18 68 18 83 Q19 100 33 100 Z" fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+              <path d="M119 76 Q132 68 132 83 Q131 100 117 100 Z" fill="url(#skinGradient)" stroke="#b98462" stroke-width="2"/>
+              <!-- Hair silhouette and separated fringe -->
+              <g id="caio-hair" fill="var(--caio-hair,#211d1b)" stroke="#171514" stroke-width="2" stroke-linejoin="round">
+                <path d="M27 68 Q19 47 31 31 Q40 12 64 15
+                         Q77 3 92 15 Q115 11 124 34
+                         Q134 49 122 72 L113 58
+                         Q103 63 94 52 Q84 66 70 53
+                         Q57 65 45 57 L35 75 Z"/>
+                <path d="M35 54 Q45 35 63 37 Q56 48 51 58 Z" stroke="none"/>
+                <path d="M66 47 Q78 27 95 34 Q87 46 80 54 Z" stroke="none"/>
+                <path d="M96 43 Q108 35 116 48 L111 58 Z" stroke="none"/>
+              </g>
+              <!-- Brows -->
+              <g id="caio-eyebrows" fill="none" stroke="var(--caio-hair,#211d1b)" stroke-width="4" stroke-linecap="round">
+                <path id="caio-brow-left" d="M43 70 Q54 64 65 70"/>
+                <path id="caio-brow-right" d="M85 70 Q96 64 107 70"/>
+              </g>
+              <!-- Eyes -->
+              <g id="caio-eyes">
+                <g id="caio-eye-left" transform="translate(55 82)">
+                  <ellipse cx="0" cy="0" rx="12" ry="14" fill="var(--caio-eyes-white,#fffaf3)"/>
+                  <ellipse cx="2" cy="2" rx="6.5" ry="8.5" fill="var(--caio-eyes,#594236)"/>
+                  <ellipse cx="4" cy="-2" rx="2.5" ry="3" fill="#fff"/>
+                </g>
+                <g id="caio-eye-right" transform="translate(95 82)">
+                  <ellipse cx="0" cy="0" rx="12" ry="14" fill="var(--caio-eyes-white,#fffaf3)"/>
+                  <ellipse cx="-2" cy="2" rx="6.5" ry="8.5" fill="var(--caio-eyes,#594236)"/>
+                  <ellipse cx="0" cy="-2" rx="2.5" ry="3" fill="#fff"/>
+                </g>
+              </g>
+              <!-- Nose and mouth -->
+              <path d="M75 85 Q70 100 75 103 Q80 105 83 101" fill="none" stroke="#b98462" stroke-width="2.5" stroke-linecap="round"/>
+              <g id="caio-mouth" transform="translate(75 119)">
+                <path id="caio-mouth-path" d="M-11 0 Q0 5 11 0" fill="none" stroke="#875943" stroke-width="3" stroke-linecap="round"/>
+              </g>
+              <!-- Subtle cheek shading -->
+              <ellipse cx="43" cy="104" rx="9" ry="4" fill="#d79c7d" opacity=".28"/>
+              <ellipse cx="107" cy="104" rx="9" ry="4" fill="#d79c7d" opacity=".28"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      
+      <!-- Phone -->
+      <div class="phone clip" data-start="12" data-duration="7" id="phone">
+        <div class="phone-body"></div>
+        <div class="phone-screen" id="phoneScreen">
+          <div class="phone-message" id="phoneMsg1"></div>
+        </div>
+        <div class="phone-notification" id="phoneNotif1">NOVA MENSAGEM</div>
+      </div>
+    </div>
+    
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      
+      // Caio walks down street
+      tl.to("#caio-body", { x: 200, duration: 4, ease: "power1.inOut" }, 0.5);
+      
+      // Walk cycle - legs
+      tl.to("#caio-leg-left", { rotation: 20, transformOrigin: "center top", duration: 0.3, yoyo: true, repeat: 12, ease: "power1.inOut" }, 0.5);
+      tl.to("#caio-leg-right", { rotation: -20, transformOrigin: "center top", duration: 0.3, yoyo: true, repeat: 12, ease: "power1.inOut" }, 0.65);
+      tl.to("#caio-arm-left", { rotation: -20, transformOrigin: "50% 0%", duration: 0.3, yoyo: true, repeat: 12, ease: "power1.inOut" }, 0.5);
+      tl.to("#caio-arm-right", { rotation: 20, transformOrigin: "50% 0%", duration: 0.3, yoyo: true, repeat: 12, ease: "power1.inOut" }, 0.65);
+      
+      // Bob up/down
+      tl.to("#caio-body", { y: -8, duration: 0.3, yoyo: true, repeat: 25, ease: "power1.inOut" }, 0.5);
+      
+      // Approaches supermarket
+      tl.to("#caio-body", { x: 350, duration: 3, ease: "power1.inOut" }, 5);
+      
+      // Zombie appears near market
+      tl.to("#zombie", { opacity: 1, y: -30, duration: 1, ease: "power2.out" }, 8);
+      
+      // Caio notices zombie - stops
+      tl.to("#caio-body", { x: 300, duration: 1, ease: "power2.out" }, 9);
+      tl.to("#caio-leg-left, #caio-leg-right, #caio-arm-left, #caio-arm-right", { rotation: 0, duration: 0.3 }, 9);
+      tl.to("#caio-body", { y: 0, duration: 0.3 }, 9);
+      
+      // Fear reaction
+      tl.to("#caio-head", { rotation: -15, transformOrigin: "center center", duration: 0.4, ease: "power2.out" }, 9.2);
+      tl.to("#caio-brow-left", { attr: { d: "M15 35 Q35 10 55 35" } }, 9.2);
+      tl.to("#caio-brow-right", { attr: { d: "M65 35 Q85 10 105 35" } }, 9.2);
+      tl.to("#caio-eye-left ellipse:nth-child(2), #caio-eye-right ellipse:nth-child(2)", 
+        { attr: { rx: 14, ry: 16 }, duration: 0.2 }, 9.2);
+      tl.to("#caio-mouth-path", { attr: { d: "M-10 0 Q0 18 10 0" } }, 9.2);
+      
+      // Hide behind cover
+      tl.to("#caio-body", { x: 150, y: 20, scale: 0.9, transformOrigin: "center bottom", duration: 1, ease: "power2.out" }, 10);
+      
+      // Zombie shambles
+      tl.to("#zombie-svg", { x: -20, duration: 2, yoyo: true, repeat: 2, ease: "power1.inOut" }, 10);
+      
+      // Phone notification at 12s
+      tl.to("#phone", { opacity: 1, y: -20, duration: 0.5, ease: "back.out(1.7)" }, 12);
+      tl.to("#phoneNotif1", { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" }, 12.2);
+      
+      // Phone vibrates
+      tl.to("#phone", { x: -5, duration: 0.05, repeat: 10, yoyo: true, ease: "rough({strength: 5, points: 20})" }, 12.5);
+      
+      // Message 1 appears: "NÃO ENTRE NO MERCADO"
+      tl.set("#phoneMsg1", { innerHTML: "NÃO ENTRE<br>NO MERCADO", className: "+=visible" }, 13);
+      tl.to("#phoneMsg1", { opacity: 1, duration: 0.3 }, 13);
+      
+      // Caio reads message - confusion
+      tl.to("#caio-head", { rotation: 20, transformOrigin: "center center", duration: 0.5, ease: "power2.out" }, 13.5);
+      tl.to("#caio-brow-left", { attr: { d: "M15 35 Q35 30 55 35" } }, 13.5);
+      tl.to("#caio-brow-right", { attr: { d: "M65 35 Q85 30 105 35" } }, 13.5);
+      tl.to("#caio-eye-left ellipse:nth-child(2), #caio-eye-right ellipse:nth-child(2)", 
+        { attr: { rx: 13, ry: 15 }, duration: 0.3 }, 13.5);
+      tl.to("#caio-mouth-path", { attr: { d: "M-10 0 Q0 12 10 0" } }, 13.5);
+      
+      // Looks around - who sent this?
+      tl.to("#caio-head", { rotation: -20, transformOrigin: "center center", duration: 0.6, ease: "power2.inOut" }, 14.5);
+      tl.to("#caio-head", { rotation: 20, transformOrigin: "center center", duration: 0.6, ease: "power2.inOut" }, 15.5);
+      tl.to("#caio-head", { rotation: 0, transformOrigin: "center center", duration: 0.5, ease: "power2.out" }, 16.5);
+      
+      // Phone screen glows
+      tl.to("#phoneScreen", { background: "#002a10", duration: 0.5, yoyo: true, repeat: 3 }, 15);
+      
+      window.__timelines = window.__timelines || {};
+      window.__timelines["scene5"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
