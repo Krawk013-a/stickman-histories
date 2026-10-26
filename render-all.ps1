@@ -28,7 +28,7 @@ for ($i = 0; $i -lt $scenes.Count; $i++) {
   & npx --yes hyperframes render --composition $scene --output $out --fps 30 --quality standard
   if ($LASTEXITCODE -ne 0 -or -not (Test-Path $out)) { throw "Falha ao renderizar $scene. Veja o erro acima." }
   $absolute = (Resolve-Path $out).Path.Replace('\','/')
-  Add-Content -Path $concatFile -Value "file '$absolute'" -Encoding utf8
+  Add-Content -Path $concatFile -Value "file '$absolute'" -Encoding ascii
 }
 
 Write-Host ""
