@@ -1,0 +1,9 @@
+{
+  "name": "ultimo-estoque",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Série animada vertical em HTML, SVG e GSAP",
+  "scripts": {
+    "render": "powershell -ExecutionPolicy Bypass -File ./render-all.ps1"
+  }
+}
